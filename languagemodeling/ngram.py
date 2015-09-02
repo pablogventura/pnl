@@ -18,6 +18,12 @@ class NGram(object):
         self.corpus = sents
         self.corpus_size = len(self.corpus)
 
+        if self.n > 0:
+            sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
+
+
+        sents = list(map((lambda x: x+['</s>']),sents))
+
         for sent in sents:
             for i in range(len(sent) - n + 1):
                 ngram = tuple(sent[i: i + n])
@@ -55,10 +61,10 @@ class NGram(object):
         if not prev_tokens:
             assert self.n == 1
             prev_tokens = tuple()
-            assert type(prev_tokens) is tuple
 
-        hits = self.count((prev_tokens+(token,)))
-        sub_count = self.count(prev_tokens,)
+
+        hits = self.count((tuple(prev_tokens)+(token,)))
+        sub_count = self.count(tuple(prev_tokens))
 
         return hits / float(sub_count)
 
@@ -102,7 +108,6 @@ class NGram(object):
         sent -- the sentence as a list of tokens.
         """
         M = float(len(sent))
-
         return log2(self.sent_prob(sent)) / M
 
 
@@ -159,30 +164,30 @@ class NGramGenerator(object):
 
 #LET'S DO SOME TESTING!
 
-from nltk.corpus import PlaintextCorpusReader
+#from nltk.corpus import PlaintextCorpusReader
 
 
-sents = PlaintextCorpusReader('scripts/','shakespeare_no_signs.txt').sents()
-print("\r\ngenerando modelo 1-grama\r\n")
-t0 = time.time()
+#sents = PlaintextCorpusReader('scripts/','shakespeare_no_signs.txt').sents()
+#print("\r\ngenerando modelo 1-grama\r\n")
+#t0 = time.time()
 #model1gram=NGram(1, sents)
-print(time.time() - t0)
-print("\r\ngenerando modelo 2-grama\r\n")
-t0 = time.time()
-model2gram=NGram(2, sents)
-print(time.time() -t0)
-print("\r\ngenerando modelo 3-grama\r\n")
-t0=time.time()
+#print(time.time() - t0)
+#print("\r\ngenerando modelo 2-grama\r\n")
+#t0 = time.time()
+#model2gram=NGram(2, sents)
+#print(time.time() -t0)
+#print("\r\ngenerando modelo 3-grama\r\n")
+#t0=time.time()
 #model3gram=NGram(3, sents)
-print(time.time() -t0)
-print("\r\ngenerando modelo 4-grama\r\n")
-t0 = time.time()
+#print(time.time() -t0)
+#print("\r\ngenerando modelo 4-grama\r\n")
+#t0 = time.time()
 #model4gram=NGram(4, sents)
-print(time.time()-t0)
+#print(time.time()-t0)
 
 
 #trained1gram=NGramGenerator(model1gram)
-trained2gram=NGramGenerator(model2gram)
+#trained2gram=NGramGenerator(model2gram)
 #trained3gram=NGramGenerator(model3gram)
 #trained4gram=NGramGenerator(model4gram)
 
