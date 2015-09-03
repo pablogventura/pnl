@@ -18,7 +18,7 @@ class NGram(object):
         self.corpus = sents
         self.corpus_size = len(self.corpus)
 
-        if self.n > 0:
+        if self.n > 1:
             sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
 
 
@@ -74,32 +74,15 @@ class NGram(object):
         sent -- the sentence as a list of tokens.
         """
 
-        counter = defaultdict(int)
+        prob = 1.0
+        sent = ['<s>']*(self.n-1)+sent+['</s>']
 
+        for i in range(self.n-1,len(sent)-self.n+1):
+            prob *= self.cond_prob(sent[i],tuple(sent[i-self.n+1:i]))
+            if not prob:
+                break
 
-        #dada una sentencia m, de largo k,m_1...m_k, y un modelo de n-gramas
-        #para calcular los primeros n-1 simbolos iniciales,
-        #ie, q(m_1,*,...,*), podemos calcularlo, viendo cuántas sentencias
-        #comienzan con m_1 y cocientando por la cantidad de sentencias.
-        #lo mismo para los restantes símbolos de comienzo.
-        #para el resto, usamos los parametros q(u_j,...,u_1)
-
-        #computamos simulando símbolo de comienzo
-        for i in range(0, self.n-1):
-            for aux_sent in self.corpus:
-                if aux_sent[0:i+1]==sent[0:i+1]:
-                    counter[tuple(sent[0:i+1])]+=1
-
-        sent_p=1.0
-
-        for val in counter.values():
-            sent_p*=val/len(self.corpus)
-
-        for j in range(0, len(sent)-self.n):
-            r = self.cond_prob(sent[j+self.n-1],tuple(sent[j:j+self.n-1]))
-            sent_p *=r
-            
-        return sent_p
+        return prob
 
 
     def sent_log_prob(self, sent):
@@ -107,8 +90,11 @@ class NGram(object):
  
         sent -- the sentence as a list of tokens.
         """
-        M = float(len(sent))
-        return log2(self.sent_prob(sent)) / M
+
+        prob = self.sent_prob(sent)
+        if not prob:
+            return float('-inf')
+        return log2(prob)
 
 
 class NGramGenerator(object):
