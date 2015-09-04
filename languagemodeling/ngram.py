@@ -3,7 +3,7 @@ from collections import defaultdict
 from math import log2
 from random import random
 import operator
-
+from time import time
 
 class NGram(object):
 
@@ -141,7 +141,9 @@ class NGramGenerator(object):
 
 
 
-from nltk.corpus import PlaintextCorpusReader
-sents = PlaintextCorpusReader('scripts/','shakespeare.txt').sents()
-model2gram = NGram(2,sents[:200])
-trained2gram = NGramGenerator(model2gram)
+#from nltk.corpus import PlaintextCorpusReader
+#sents = PlaintextCorpusReader('scripts/','shakespeare.txt').sents()
+#t0=time()
+#model4gram = NGram(4,sents)
+#trained4gram = NGramGenerator(model4gram)
+#print(time()-t0)
