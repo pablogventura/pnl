@@ -12,9 +12,6 @@ Options:
 
 from docopt import docopt
 import pickle
-
-from nltk.corpus import PlaintextCorpusReader
-
 from languagemodeling.ngram import NGramGenerator
 
 
@@ -22,15 +19,15 @@ if __name__ == '__main__':
     opts = docopt(__doc__)
 
     # parse args
-    n = int(opt['-n'])
+    n = int(opts['-n'])
 
     # load the trained model
-    filename = opts['-o']
-    trained_model = pickcle.load(open('filename','rb'))
+    filename = opts['-i']
+    trained_model = pickle.load(open(filename,'rb'))
 
     tr_model = NGramGenerator(trained_model)
 
-    print("\r\nGenerando sentencias a partir de un modelo de %s-grama(s)"%n,"\r\n") 
+    print("\r\nGenerando sentencias\r\n") 
     for i in range(n):
-        tr_model.generate_sent()
+       print(tr_model.generate_sent(),"\r\n")
     
