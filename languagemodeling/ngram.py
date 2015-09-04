@@ -104,13 +104,13 @@ class NGramGenerator(object):
 
         sp = [list(probs[x].items()) for x in aux1]
 
-        self.sorted_probs = {aux1[i]:sorted(sp[i]) for i in range(len(sp))}
+        self.sorted_probs = {aux1[i]:sorted(sp[i],key=lambda x: x[1],reverse=True) for i in range(len(sp))}
 
 
     def generate_sent(self):
         """Randomly generate a sentence."""
 
-        sent = ('<s>'*(self.n-1),)
+        sent = ('<s>',)*(self.n-1)
         if self.n == 1:
             sent = ()
         while not '</s>' in sent:
@@ -121,15 +121,16 @@ class NGramGenerator(object):
         """Randomly generate a token, given prev_tokens.
         prev_tokens -- the previous n-1 tokens (optional only if n = 1).
         """
-        
+
         if self.n ==1:
             prev_tokens = tuple()
         p = random()
-
+        res = ''
         choices = self.sorted_probs[prev_tokens]
 
         acc = choices[0][1]
         for i in range(0,len(choices)):
+
             if p < acc:
                 res = choices[i][0]
                 break
