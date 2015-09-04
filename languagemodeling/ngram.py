@@ -114,7 +114,6 @@ class NGramGenerator(object):
         if self.n == 1:
             sent = ()
         while not '</s>' in sent:
-            print(sent)
             sent += (self.generate_token(sent[-self.n+1:]),)
         return sent[self.n-1:-1]
 
@@ -142,7 +141,7 @@ class NGramGenerator(object):
 
 
 
-#from nltk.corpus import PlaintextCorpusReader
-#sents = PlaintextCorpusReader('scripts/','shakespeare.txt').sents()
-#model2gram = NGram(2,sents[:15])
-#trained2gram = NGramGenerator(model2gram)
+from nltk.corpus import PlaintextCorpusReader
+sents = PlaintextCorpusReader('scripts/','shakespeare.txt').sents()
+model2gram = NGram(2,sents[:200])
+trained2gram = NGramGenerator(model2gram)
