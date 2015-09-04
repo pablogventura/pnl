@@ -15,9 +15,6 @@ class NGram(object):
         assert n > 0
         self.n = n
         self.counts = counts = defaultdict(int)
-        self.corpus = sents
-        self.corpus_size = len(self.corpus)
-
 
         sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
         sents = list(map((lambda x: x + ['</s>']), sents))
@@ -93,8 +90,7 @@ class NGramGenerator(object):
         """
         model -- n-gram model.
         """
-
-        self.trained_model = model
+        self.n = model.n
         self.probs = probs = dict()
         self.sorted_probs = dict()
 
@@ -114,47 +110,39 @@ class NGramGenerator(object):
     def generate_sent(self):
         """Randomly generate a sentence."""
 
-        counter = defaultdict(int)
-        sent = ''
-
-        for i in range(0, len(self.trained_model.corpus)):
-            counter[self.trained_model.corpus[i][0]] += 1
-
-        while not sent[-1] == '</s>':
-            sent += " "+self.generate_token(tuple(sent.split()[:self.trained_model.n-1]))
-
-        return sent
+        sent = ('<s>'*(self.n-1),)
+        if self.n == 1:
+            sent = ()
+        while not '</s>' in sent:
+            print(sent)
+            sent += (self.generate_token(sent[-self.n+1:]),)
+        return sent[self.n-1:-1]
 
     def generate_token(self, prev_tokens=None):
         """Randomly generate a token, given prev_tokens.
         prev_tokens -- the previous n-1 tokens (optional only if n = 1).
         """
-
+        
+        if self.n ==1:
+            prev_tokens = tuple()
         p = random()
-        xs = [elem[-1] for elem in self.probs.keys() if elem[0:len(prev_tokens)]==prev_tokens]
 
-        ys = defaultdict(int)
+        choices = self.sorted_probs[prev_tokens]
 
-        for w in xs:
-            ys[w] = self.probs[prev_tokens+(w,)]
-
-        ys = sorted(ys.items(),key=operator.itemgetter(1),reverse=True)
-
-        acc = ys[0][1]
-        for i in range(0,len(ys)):
+        acc = choices[0][1]
+        for i in range(0,len(choices)):
             if p < acc:
-                res = ys[i][0]
+                res = choices[i][0]
                 break
             else:
-                acc += ys[i][1]
-
+                acc += choices[i][1]
         return res
 
 
 
 
 
-from nltk.corpus import PlaintextCorpusReader
-sents = PlaintextCorpusReader('scripts/','shakespeare.txt').sents()
-model2gram = NGram(2,sents[:15])
-trained2gram = NGramGenerator(model2gram)
+#from nltk.corpus import PlaintextCorpusReader
+#sents = PlaintextCorpusReader('scripts/','shakespeare.txt').sents()
+#model2gram = NGram(2,sents[:15])
+#trained2gram = NGramGenerator(model2gram)
