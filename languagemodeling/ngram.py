@@ -94,10 +94,12 @@ class NGramGenerator(object):
         self.n = model.n
         self.probs = probs = dict()
         self.sorted_probs = dict()
-
+        # pre, list of sentences with length n-1 (of a n-gram model)
         pre = [elem for elem in model.counts.keys() if not len(elem) == model.n]
+        # suf, list of sentences with length n (of a n-gram model)
         suf = [elem for elem in model.counts.keys() if len(elem) == model.n]
         # revisar, super ineficiente
+        
         for prefix in pre:
             probs[prefix] = {sufix[-1]:model.cond_prob(sufix[-1],prefix) for sufix in suf if prefix==sufix[:-1]}
 
