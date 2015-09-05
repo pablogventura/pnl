@@ -141,7 +141,6 @@ class NGramGenerator(object):
         return res
 
 
-
 class AddOneNGram(object):
 
     def __init__(self, n, sents):
