@@ -3,7 +3,6 @@ from collections import defaultdict
 from math import log2
 from random import random
 import operator
-from time import time
 
 class NGram(object):
 
