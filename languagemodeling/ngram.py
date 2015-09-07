@@ -35,8 +35,6 @@ class NGram(object):
         aux_count = self.counts[tuple(tokens)]
         return aux_count / float(self.counts[tuple(prev_tokens)])
 
-
-# ##TODO###
     def count(self, tokens):
         """Count for an n-gram or (n-1)-gram.
         tokens -- the n-gram or (n-1)-gram tuple.
@@ -197,3 +195,39 @@ class AddOneNGram(object):
         """Size of the vocabulary.
         """
         return len(self.voc)
+
+
+class InterpolatedNGram(object):
+
+    def __init__(self, n, sents, gamma=None, addone=True):
+        """
+        n -- order of the model.
+        sents -- list of sentences, each one being a list of tokens.
+        gamma -- interpolation hyper-parameter (if not given, estimate using
+            held-out data).
+        addone -- whether to use addone smoothing (default: True).
+        """
+ 
+        self.n = n
+
+        if addone:
+            self.tr_model = AddOneNGram(3, sents)
+            self.bi_model = AddOneNGram(2, sents)
+            self.un_model = AddOneNGram(1, sents)
+        else:
+            self.tr_model = NGram(3, sents)
+            self.bi_model = NGram(2, sents)
+            self.un_model = NGram(1, sents)
+
+    def count(self, tokens):
+        """Count for an k-gram for k <= n.
+ 
+        tokens -- the k-gram tuple.
+        """
+ 
+    def cond_prob(self, token, prev_tokens=None):
+        """Conditional probability of a token.
+ 
+        token -- the token.
+        prev_tokens -- the previous n-1 tokens (optional only if n = 1).
+        """

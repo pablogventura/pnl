@@ -19,7 +19,7 @@ if __name__ == '__main__':
     opts = docopt(__doc__)
 
     # load the data
-    sents = PlaintextCorpusReader('.','shakespeare.txt').sents()
+    sents = PlaintextCorpusReader('../languagemodeling/corpora/','training_data.txt').sents()
     # train the model
     n = int(opts['-n'])
     model = NGram(n, sents)
