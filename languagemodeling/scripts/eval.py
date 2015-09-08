@@ -25,13 +25,13 @@ if __name__ == '__main__':
 
     test_data = PlaintextCorpusReader('../languagemodeling/corpora/','test_data.txt').sents()
 
-    M = 0
+    M = 0.0
     for sent in test_data:
         M += len(sent)
     l = 0.0
 
     for sent in test_data:
-        l += model.sent_log_prob(sent)
-    l = -l/M
+        l += model.sent_log_prob(sent) / M
+
     print("cross-entropy: ", l)
-    print("perplexity: ",pow(2,l))
+    print("perplexity: ",pow(2,-l))

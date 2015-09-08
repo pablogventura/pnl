@@ -1,6 +1,6 @@
 # https://docs.python.org/3/library/collections.html
 from collections import defaultdict
-from math import log2
+from math import log
 from random import random
 import operator
 
@@ -76,10 +76,16 @@ class NGram(object):
         sent -- the sentence as a list of tokens.
         """
 
-        prob = self.sent_prob(sent)
-        if not prob:
-            return float('-inf')
-        return log2(prob)
+        prob = 0
+        sent = ['<s>']*(self.n-1)+sent+['</s>']
+
+        for i in range(self.n-1, len(sent)-self.n+1):
+            c_p = self.cond_prob(sent[i], tuple(sent[i-self.n+1:i]))
+            if not c_p:
+                return float('-inf')
+            prob += log(c_p,2)
+
+        return prob
 
 
 class NGramGenerator(object):
@@ -154,10 +160,8 @@ class AddOneNGram(object):
         self.voc = set()
 
         sents = list(map((lambda x: x + ['</s>']), sents))
-
         for s in sents:
             self.voc = self.voc.union(set(s))
-
 
         sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
 
@@ -188,8 +192,36 @@ class AddOneNGram(object):
         sub_count = self.count(tuple(prev_tokens))
 
         return (hits+1) / (float(sub_count)+len(self.voc))
- 
 
+    def sent_prob(self, sent):
+        """Probability of a sentence. Warning: subject to underflow problems.
+        sent -- the sentence as a list of tokens.
+        """
+
+        prob = 1.0
+        sent = ['<s>']*(self.n-1)+sent+['</s>']
+
+        for i in range(self.n-1, len(sent)-self.n+1):
+            prob *= self.cond_prob(sent[i], tuple(sent[i-self.n+1:i]))
+
+            if not prob:
+                break
+
+        return prob
+
+    def sent_log_prob(self, sent):
+        """Log-probability of a sentence.
+        sent -- the sentence as a list of tokens.
+        """
+
+        prob = 0.0
+        sent = ['<s>']*(self.n-1)+sent+['</s>']
+
+        for i in range(self.n-1, len(sent)-self.n+1):
+
+            prob += log(self.cond_prob(sent[i], tuple(sent[i-self.n+1:i])),2)
+
+        return prob
 
     def V(self):
         """Size of the vocabulary.
