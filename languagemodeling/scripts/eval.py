@@ -33,5 +33,4 @@ if __name__ == '__main__':
     for sent in test_data:
         l += model.sent_log_prob(sent) / M
 
-    print("cross-entropy: ", l)
     print("perplexity: ",pow(2,-l))

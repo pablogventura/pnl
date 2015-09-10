@@ -239,27 +239,132 @@ class InterpolatedNGram(object):
             held-out data).
         addone -- whether to use addone smoothing (default: True).
         """
- 
-        self.n = n
 
-        if addone:
-            self.tr_model = AddOneNGram(3, sents)
-            self.bi_model = AddOneNGram(2, sents)
-            self.un_model = AddOneNGram(1, sents)
+        self.sents = sents
+        self.gamma = gamma
+
+        if gamma >= 0:
+
+            # create the models
+            if addone:
+                models_dict = {i:AddOneNGram(i, sents) for i in range(2,n+1)}
+            else:
+                models_dict = {i:NGram(i, sents) for i in range(2,n+1)}
+            # models_list holds n models, being the first, a AddOneNGram of order 1
+            models_dict[1]=AddOneNGram(1, sents)
+
+        # if no gamma given, estimate it from held out data
+        # let's search for gamma !
         else:
-            self.tr_model = NGram(3, sents)
-            self.bi_model = NGram(2, sents)
-            self.un_model = NGram(1, sents)
+            total_sents = len(sents)
+            aux = round(total_sents * 90 / 100)
+            # 90 per cent por training
+            train_sents = sents[:aux]
+            # 10 per cent for perplexity
+            held_out_sents = sents[-total_sents+aux:]
+
+            # create the models
+            if addone:
+                self.models_dict = {i:AddOneNGram(i,train_sents) for i in range(2,n+1)}
+            else:
+                self.models_dict = {i:NGram(i,train_sents) for i in range(2,n+1)}
+            # models_list holds n models, being the first, a AddOneNGram of order 1
+            self.models_dict[1]=AddOneNGram(1, train_sents)
+
+
+            gamma_list = [i*500 for i in range(1,11)]
+            
+            M = 0
+            for sent in held_out_sents:
+                M += len(sent)
+            l = 0.0
+            
+            for sent in held_out_sents:
+                l+=self.sent_log_prob(sent)
+
+
+
+
+        self.counts = counts = defaultdict(int)
+
+        sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
+        sents = list(map((lambda x: x + ['</s>']), sents))
+
+        gamma_list = [x*500 for x in range(1,10)]
+
+        for aux_gamma in gamma_list:
+
+            lambdas = []
+            for i range(0, n-1):
+                lambda.append((1-sum(lambdas[:i])) * self.count(sent[i:n-1]) /  (self.count(sent[i:n-1]) + aux_gamma))
+            lambdas.append(1-sum(lambdas))
+
+
+
+
+    self.models = models_dict
 
     def count(self, tokens):
-        """Count for an k-gram for k <= n.
- 
-        tokens -- the k-gram tuple.
+        """Count for an n-gram or (n-1)-gram.
+        tokens -- the n-gram or (n-1)-gram tuple.
         """
- 
+        return self.counts[tokens]
+
     def cond_prob(self, token, prev_tokens=None):
         """Conditional probability of a token.
- 
         token -- the token.
         prev_tokens -- the previous n-1 tokens (optional only if n = 1).
         """
+
+        models = self.models_dict
+        n = self.n
+        gamma = self.gamma
+        # if gamma given
+
+        lambdas = []
+        for i range(0, n-1):
+            # list of lambdas, first corresponded with higher ngram model
+            # i.e., lambdas[0] is for the n-gram model, lambdas[1] for n-1)-gram model
+            # and so on...
+            lambdas.append((1-sum(lambdas[:i])) * models[n-i].counts(tokens[i:n-1]) / \
+                           (models[n-i].counts(tokens[i:n-1]) + gamma))
+        lambdas.append(1-sum(lambdas))
+
+        xs = [lambdas[i]*models[n-i].cond_prob(token, prev_tokens) for i in range(0, n)]            
+        return sum(xs)
+
+
+    def sent_prob(self, sent):
+        """Probability of a sentence. Warning: subject to underflow problems.
+ 
+        sent -- the sentence as a list of tokens.
+        """
+ 
+        prob = 1.0
+        sent = ['<s>']*(self.n-1)+sent+['</s>']
+
+        for i in range(self.n-1, len(sent)-self.n+1):
+            prob *= self.cond_prob(sent[i], tuple(sent[i-self.n+1:i]))
+
+            if not prob:
+                break
+
+        return prob
+
+
+    def sent_log_prob(self, sent):
+        """Log-probability of a sentence.
+ 
+        sent -- the sentence as a list of tokens.
+        """
+
+        prob = 0
+        sent = ['<s>']*(self.n-1)+sent+['</s>']
+
+        for i in range(self.n-1, len(sent)-self.n+1):
+            c_p = self.cond_prob(sent[i], tuple(sent[i-self.n+1:i]))
+            if not c_p:
+                return float('-inf')
+            prob += log(c_p,2)
+
+        return prob
