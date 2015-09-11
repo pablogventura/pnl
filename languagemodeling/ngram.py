@@ -53,6 +53,10 @@ class NGram(object):
 
         hits = self.count((tuple(prev_tokens)+(token,)))
         sub_count = self.count(tuple(prev_tokens))
+        if not sub_count:
+            print("Hey, you!\r\n")
+            print(self.n, self.counts)
+            print("\r\n sub count for ngram \r\n", prev_tokens)
 
         return hits / float(sub_count)
 
@@ -153,7 +157,6 @@ class AddOneNGram(object):
         n -- order of the model.
         sents -- list of sentences, each one being a list of tokens.
         """
- 
         assert n > 0
         self.n = n
         self.counts = counts = defaultdict(int)
@@ -190,7 +193,8 @@ class AddOneNGram(object):
 
         hits = self.count((tuple(prev_tokens)+(token,)))
         sub_count = self.count(tuple(prev_tokens))
-
+        if not sub_count:
+            print("\r\n sub count for addonengram \r\n", prev_tokens)
         return (hits+1) / (float(sub_count)+len(self.voc))
 
     def sent_prob(self, sent):
@@ -239,20 +243,22 @@ class InterpolatedNGram(object):
             held-out data).
         addone -- whether to use addone smoothing (default: True).
         """
-
+        self.n = n
         self.sents = sents
         self.gamma = gamma
 
-        if gamma >= 0:
+        if not gamma == None:
 
             # create the models
             if addone:
-                models_dict = {i:AddOneNGram(i, sents) for i in range(2,n+1)}
+                self.models_dict = {i:AddOneNGram(i, sents) for i in range(2,n+1)}
             else:
-                models_dict = {i:NGram(i, sents) for i in range(2,n+1)}
+                self.models_dict = {i:NGram(i, sents) for i in range(2,n+1)}
             # models_list holds n models, being the first, a AddOneNGram of order 1
-            models_dict[1]=AddOneNGram(1, sents)
-
+            self.models_dict[1]=AddOneNGram(1, sents)
+            for j in range(1,n+1):
+                print("printing models\r\n")
+                print(j,self.models_dict[j].counts)
         # if no gamma given, estimate it from held out data
         # let's search for gamma !
         else:
@@ -273,36 +279,30 @@ class InterpolatedNGram(object):
 
 
             gamma_list = [i*500 for i in range(1,11)]
-            
-            M = 0
-            for sent in held_out_sents:
-                M += len(sent)
-            l = 0.0
-            
-            for sent in held_out_sents:
-                l+=self.sent_log_prob(sent)
+            gamma_perx_list = []
+            # for each gamma candidate, we compute
+            # its perplexity against the
+            # held out data
+            for aux_gamma in gamma_list:
 
+                M = 0
+                for sent in held_out_sents:
+                    M += len(sent)
+                    l = 0.0
 
+                for sent in held_out_sents:
+                    l+=self.sent_log_prob(sent)
+                perx = pow(2,-l)
+                gamma_perx_list.append((aux_gamma, perx))
 
+            gamma_perx_list.sort(key=lambda x:x[1])
 
+            gamma = gamma_perx_list[0][0]
         self.counts = counts = defaultdict(int)
 
         sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
         sents = list(map((lambda x: x + ['</s>']), sents))
 
-        gamma_list = [x*500 for x in range(1,10)]
-
-        for aux_gamma in gamma_list:
-
-            lambdas = []
-            for i range(0, n-1):
-                lambda.append((1-sum(lambdas[:i])) * self.count(sent[i:n-1]) /  (self.count(sent[i:n-1]) + aux_gamma))
-            lambdas.append(1-sum(lambdas))
-
-
-
-
-    self.models = models_dict
 
     def count(self, tokens):
         """Count for an n-gram or (n-1)-gram.
@@ -322,15 +322,19 @@ class InterpolatedNGram(object):
         # if gamma given
 
         lambdas = []
-        for i range(0, n-1):
+        for i in range(0, n-1):
             # list of lambdas, first corresponded with higher ngram model
             # i.e., lambdas[0] is for the n-gram model, lambdas[1] for n-1)-gram model
             # and so on...
-            lambdas.append((1-sum(lambdas[:i])) * models[n-i].counts(tokens[i:n-1]) / \
-                           (models[n-i].counts(tokens[i:n-1]) + gamma))
+            lambdas.append((1-sum(lambdas[:i])) * models[n-i].count(tuple(prev_tokens[i:n-1])) / \
+                           (models[n-i].count(tuple(prev_tokens[i:n-1])) + gamma))
         lambdas.append(1-sum(lambdas))
 
-        xs = [lambdas[i]*models[n-i].cond_prob(token, prev_tokens) for i in range(0, n)]            
+        xs = []
+        for i in range(0,n):
+            q = models[n-i].cond_prob(token, prev_tokens)
+            xs.append(lambdas[i]*q)
+
         return sum(xs)
 
 
