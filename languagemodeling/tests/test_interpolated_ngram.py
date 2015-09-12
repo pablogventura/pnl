@@ -40,7 +40,7 @@ class TestInterpolatedNGram(TestCase):
             ('come',): 2,
             ('pescado',): 1,
             ('.',): 2,
-            ('</s>',): 2,
+#            ('</s>',): 2,
             ('la',): 1,
             ('gata',): 1,
             ('salmón',): 1,
@@ -77,7 +77,6 @@ class TestInterpolatedNGram(TestCase):
 
         c1 = 2.0  # count for 'come' (and '.')
         l1 = c1 / (c1 + gamma)
-
         probs = {
             ('pescado', 'come'): l1 * 0.5 + (1.0 - l1) * 1 / 12.0,
             ('salmón', 'come'): l1 * 0.5 + (1.0 - l1) * 1 / 12.0,
@@ -123,9 +122,10 @@ class TestInterpolatedNGram(TestCase):
         ]
 
         tokens = {'el', 'gato', 'come', 'pescado', '.', 'la', 'gata', 'salmón', '</s>'}
+        prevs = {'el', 'gato', 'come', 'pescado', '.', 'la', 'gata', 'salmón',}
 
         for model in models:
-            for prev in list(tokens) + ['<s>']:
+            for prev in prevs:
                 prob_sum = sum(model.cond_prob(token, [prev]) for token in tokens)
                 # prob_sum < 1.0 or almost equal to 1.0:
                 self.assertTrue(prob_sum < 1.0 or abs(prob_sum - 1.0) < 1e-10)
