@@ -1,7 +1,7 @@
 """Train an n-gram model.
 
 Usage:
-  train.py -n <n> -o <file> [-m <model>]
+  train.py -n <n> -o <file> [-m <model> [-g <gamma> -ad <n>]]
   train.py -h | --help
 
 Options:
@@ -9,6 +9,7 @@ Options:
   -m <model>    Model to use [default: ngram]:
                   ngram: Unsmoothed n-grams.
                   addone: N-grams with add-one smoothing.
+                  interpolated: an interpolated model.
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     opts = docopt(__doc__)
 
     # load the data
-    sents = PlaintextCorpusReader('../languagemodeling/corpora/','training_data.txt').sents()
+    sents = PlaintextCorpusReader('../languagemodeling/corpora/','training_corpus.txt').sents()
     # train the model
     n = int(opts['-n'])
     m = str(opts['-m'])

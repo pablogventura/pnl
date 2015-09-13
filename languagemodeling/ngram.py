@@ -93,16 +93,15 @@ class NGram(object):
         """
 
         M = 0
-        for sent in test_data:
+        for sent in sents:
             M += len(sent)
 
         l = 0.0
 
-        for sent in test_data:
-            l += model.sent_log_prob(sent) / M
+        for sent in sents:
+            l += self.sent_log_prob(sent) / M
 
-        return round(pow(2, -l))
-
+        return pow(2,-l)
 
 class AddOneNGram(NGram):
 
@@ -152,25 +151,16 @@ class InterpolatedNGram(AddOneNGram):
         self.voc = set(['</s>'])
         self.counts = counts = defaultdict(int)
         self.lambda_list = []
+        self.gamma_flag = True
 
         for s in sents:
             self.voc = self.voc.union(set(s))
 
-        # if gamma given
-        if not gamma == None:
-            sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
-            sents = list(map((lambda x: x + ['</s>']), sents))
-            #
-            for sent in sents:
-                for i in range(len(sent) - n + 1):
-                    ngram = tuple(sent[i: i + n])
-                    # for each ngram, count its smaller parts, from right to left
-                    # eg, (u,v,w) saves: (u,v,w),(u,v),(w) and ()
-                    for k in range(0, n+1):
-                        counts[ngram[:k]] += 1
-            # since the unigram ('</s>',), doesn't forms part of a greater k-gram
-            # we have to add it by hand
-            counts[('</s>',)]=len(sents)
+
+        if gamma == None:
+            self.gamma_flag = False
+
+        # if not gamma given
         if gamma == None:
             total_sents = len(sents)
             aux = int(total_sents * 90 / 100)
@@ -178,16 +168,54 @@ class InterpolatedNGram(AddOneNGram):
             train_sents = sents[:aux]
             # 10 per cent for perplexity (held out data)
             held_out_sents = sents[-total_sents+aux:]
-            
+
             train_sents = list(map((lambda x: ['<s>']*(n-1) + x), train_sents))
             train_sents = list(map((lambda x: x + ['</s>']), train_sents))
-
+            print(train_sents)
             for sent in train_sents:
                 for i in range(len(sent) - n + 1):
                     ngram = tuple(sent[i: i + n])
                     for k in range(0, n+1):
                         counts[ngram[:k]] += 1
+            counts[('</s>',)]=len(train_sents)
+            self.held_out_sents = counts
+            print(counts)
+            # search for the gamma that gives best perplexity (the lower, the better)
+            gamma_candidates = [i*250 for i in range(1,15)]
+            # xs is a list with (gamma, perplexity)
+            xs = []
+            for aux_gamma in gamma_candidates:
+                self.gamma = aux_gamma
+                self.sents = train_sents
+                aux_perx = self.perplexity(held_out_sents)
+                xs.append( (aux_gamma, aux_perx) )
+            xs.sort(key=lambda x: x[1])
+            self.gamma = xs[0][0]
 
+        # now that we found gamma, we initialize
+
+        self.counts = counts = defaultdict(int)
+        sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
+        sents = list(map((lambda x: x + ['</s>']), sents))
+
+        for sent in sents:
+            for i in range(len(sent) - n + 1):
+                ngram = tuple(sent[i: i + n])
+                # for each ngram, count its smaller parts, from right to left
+                # eg, (u,v,w) saves: (u,v,w),(u,v),(w) and ()
+                for k in range(0, n+1):
+                    counts[ngram[:k]] += 1
+                    # since the unigram ('</s>',), doesn't forms part of a greater k-gram
+                    # we have to add it by hand
+                counts[('</s>',)]=len(sents)
+
+
+    def count(self, token):
+
+        if self.gamma_flag:
+            return self.counts[token]
+        else:
+            return self.held_out_sents[token]
 
     def cond_prob(self, token, prev_tokens=None):
         """Conditional probability of a token.
