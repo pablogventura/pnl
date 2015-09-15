@@ -169,4 +169,4 @@ class TestInterpolatedNGram(TestCase):
             ('</s>',): 1,
         }
         for gram, c in counts.items():
-            self.assertEqual(model.count(gram), c, gram)
+            self.assertEqual(model.held_out_sents[gram], c, gram)

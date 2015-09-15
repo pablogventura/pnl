@@ -126,7 +126,7 @@ class AddOneNGram(NGram):
         hits = self.count((tuple(prev_tokens)+(token,)))
         sub_count = self.count(tuple(prev_tokens))
 
-        return (hits+1) / (float(sub_count)+len(self.voc))
+        return (hits+1) / (float(sub_count)+self.V())
 
     def V(self):
         """Size of the vocabulary.
@@ -171,7 +171,7 @@ class InterpolatedNGram(AddOneNGram):
 
             train_sents = list(map((lambda x: ['<s>']*(n-1) + x), train_sents))
             train_sents = list(map((lambda x: x + ['</s>']), train_sents))
-            print(train_sents)
+
             for sent in train_sents:
                 for i in range(len(sent) - n + 1):
                     ngram = tuple(sent[i: i + n])
@@ -179,7 +179,7 @@ class InterpolatedNGram(AddOneNGram):
                         counts[ngram[:k]] += 1
             counts[('</s>',)]=len(train_sents)
             self.held_out_sents = counts
-            print(counts)
+
             # search for the gamma that gives best perplexity (the lower, the better)
             gamma_candidates = [i*250 for i in range(1,15)]
             # xs is a list with (gamma, perplexity)
@@ -208,14 +208,6 @@ class InterpolatedNGram(AddOneNGram):
                     # since the unigram ('</s>',), doesn't forms part of a greater k-gram
                     # we have to add it by hand
                 counts[('</s>',)]=len(sents)
-
-
-    def count(self, token):
-
-        if self.gamma_flag:
-            return self.counts[token]
-        else:
-            return self.held_out_sents[token]
 
     def cond_prob(self, token, prev_tokens=None):
         """Conditional probability of a token.
@@ -271,6 +263,170 @@ class InterpolatedNGram(AddOneNGram):
         for j in range(0,n):
             prob += ML_probs[j+1]*lambdas[j]
         return prob
+
+
+
+class BackOffNGram(NGram):
+
+    def __init__(self, n, sents, beta=None, addone=True):
+        """
+        Back-off NGram model with discounting as described by Michael Collins.
+ 
+        n -- order of the model.
+        sents -- list of sentences, each one being a list of tokens.
+        beta -- discounting hyper-parameter (if not given, estimate using
+            held-out data).
+        addone -- whether to use addone smoothing (default: True).
+        """
+        self.n = n
+        self.beta = beta
+        self.beta_flag = True
+        self.addone = addone
+        self.voc = set()
+
+        sents = list(map((lambda x: x + ['</s>']), sents))
+        # for defining A and B sets
+        for s in sents:
+            self.voc = self.voc.union(set(s))
+
+
+        if beta == None:
+            self.beta_flag = False
+
+        # if no beta given, we compute it
+        if beta == None:
+            pass
+
+        # now we initialize
+        
+        self.counts = counts = defaultdict(int)
+        sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
+        sents = list(map((lambda x: x + ['</s>']), sents))
+        for sent in sents:
+            for i in range(len(sent) - n + 1):
+                ngram = tuple(sent[i: i + n])
+                # for each ngram, count its smaller parts, from right to left
+                # eg, (u,v,w) saves: (u,v,w),(u,v),(w) and ()
+                for k in range(0, n+1):
+                    counts[ngram[:k]] += 1
+                    # since the unigram ('</s>',), doesn't forms part of a greater k-gram
+                    # we have to add it by hand
+                counts[('</s>',)]=len(sents)
+
+
+
+
+    def cond_prob(self, token, prev_tokens=None):
+        """Conditional probability of a token.
+        token -- the token.
+        prev_tokens -- the previous n-1 tokens (optional only if n = 1).
+        """
+
+        addone = self.addone
+        n = self.n
+        alpha = self.alpha(prev_tokens)
+        A_set = self.A(prev_tokens)
+        B_set = self.B(prev_tokens)
+
+        if token in A_set:
+            result = self.count_star(tuple(prev_tokens)+(token,)) / self.count(tuple(prev_tokens))
+
+        # recursive case for bigrams
+        else:
+            prev_tokens = []
+            hits = self.count((token,))
+            # no prev tokens
+            sub_count = self.count(())
+
+            if self.addone:
+                q_ml = (hits + 1) / (sub_count + self.V())
+            else:
+                q_ml = hits / sub_count
+
+            denom_sum = self.denom(tokens)
+
+            for elem in B_set:
+                aux_hits = self.count((elem,))
+                aux_sub_count = self.count(())
+                if self.addone:
+                    aux_q_ml = (aux_hits + 1) / (aux_sub_count + self.V())
+                else:
+                    aux_q_ml = aux_hits / aux_sub_count
+                denom_sum += aux_q_ml
+            
+            result = alpha * q_ml / denom_sum
+
+        return result
+
+    def count_star(self, tokens):
+        """
+        Discounting counts for counts > 0
+        """
+        return self.counts[tokens] - self.beta
+
+
+    def A(self, tokens):
+        """Set of words with counts > 0 for a k-gram with 0 < k < n.
+ 
+        tokens -- the k-gram tuple.
+        """
+
+        return {elem for elem in self.voc if self.count(tuple(tokens)+(elem,))}
+
+    def B(self, tokens):
+        """Set of words with counts = 0 for a k-gram with 0 < k < n.
+
+        tokens -- the k-gram tuple.
+        """
+        return self.voc - self.A(tokens)
+
+    def alpha(self, tokens):
+        """Missing probability mass for a k-gram with 0 < k < n.
+ 
+        tokens -- the k-gram tuple.
+        """
+        sum = 0
+        A_set = self.A(tokens)
+
+        for elem in A_set:
+            sum += self.count_star(tuple(tokens)+(elem,)) / self.count(tuple(tokens))
+
+        return 1 - sum
+
+
+##########################
+
+
+    def denom(self, tokens):
+        """Normalization factor for a k-gram with 0 < k < n.
+ 
+        tokens -- the k-gram tuple.
+        """
+        B_set = self.B(tokens)
+        if len(tokens)==1:
+            res = 0
+            for w in B_set:
+                hits = self.count((w,))
+                sub_count = self.count(())
+                if self.addone:
+                    aux = (hits+1) / (sub_count + self.V())
+                else:
+                    aux = hits / sub_count
+                    res += aux
+
+        else:
+            res = 0
+            for w in B_set:
+                aux = self.cond_prob(tokens)
+                res += aux
+        return res
+
+#################################
+            
+    def V(self):
+        """Size of the vocabulary.
+        """
+        return len(self.voc)
 
 
 class NGramGenerator(object):
