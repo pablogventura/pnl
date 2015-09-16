@@ -58,7 +58,9 @@ class TestBackoffNGram(TestCase):
             ('salmón',): 1.0 - model.cond_prob('.'),
         }
         for tokens, d in denom.items():
-            self.assertEqual(model.denom(tokens), d, tokens)
+            # Had to modify from AssertEqual to AssertAlmostEqual
+            # Because of : 0.8333333333333334 != 0.8333333333333333
+            self.assertAlmostEqual(model.denom(tokens), d, 10,tokens)
 
     def test_count_1gram(self):
         models = [
@@ -164,7 +166,8 @@ class TestBackoffNGram(TestCase):
             ('salmón', 'el'): alpha * 1.0 / (12.0 * denom),
         }
         for (token, prev), p in probs.items():
-            self.assertEqual(model.cond_prob(token, [prev]), p, (token, prev))
+            # From Equal to AlmostEqual, same reason as in line 61
+            self.assertAlmostEqual(model.cond_prob(token, [prev]), p, 10,(token, prev))
 
         # the sum is one:
         prob_sum = sum(probs.values())
@@ -205,9 +208,10 @@ class TestBackoffNGram(TestCase):
         ]
 
         tokens = ['el', 'gato', 'come', 'pescado', '.', 'la', 'gata', 'salmón', '</s>']
+        tokens2 = ['el', 'gato', 'come', 'pescado', '.', 'la', 'gata', 'salmón',]
 
         for model in models:
-            for prev in list(tokens) + ['<s>']:
+            for prev in list(tokens2) + ['<s>']:
                 prob_sum = sum(model.cond_prob(token, [prev]) for token in tokens)
                 probs = [(token, model.cond_prob(token, [prev])) for token in tokens]
                 # prob_sum < 1.0 or almost equal to 1.0:
