@@ -178,7 +178,7 @@ class InterpolatedNGram(AddOneNGram):
                     for k in range(0, n+1):
                         counts[ngram[:k]] += 1
             counts[('</s>',)]=len(train_sents)
-            self.held_out_sents = counts
+            self.tocounts = counts
 
             # search for the gamma that gives best perplexity (the lower, the better)
             gamma_candidates = [i*250 for i in range(1,15)]
@@ -283,7 +283,7 @@ class BackOffNGram(NGram):
         self.beta_flag = True
         self.addone = addone
         self.voc = set()
-
+        self.counts = counts = defaultdict(int)
 
         if beta == None:
             self.beta_flag = False
@@ -306,8 +306,7 @@ class BackOffNGram(NGram):
                     for k in range(0, n+1):
                         counts[ngram[:k]] += 1
             counts[('</s>',)]=len(train_sents)
-            self.held_out_sents = counts
-
+            self.tocounts = counts
             # search for the gamma that gives best perplexity (the lower, the better)
             beta_candidates = [i*0.1 for i in range(1,9)]
             # xs is a list with (beta, perplexity)
@@ -322,13 +321,13 @@ class BackOffNGram(NGram):
 
         # now that we found beta, we initialize
 
-        self.counts = counts = defaultdict(int)
         sents = list(map((lambda x: x + ['</s>']), sents))
 
         for s in sents:
             self.voc = self.voc.union(set(s))
 
         sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
+        self.counts = counts = defaultdict(int)
 
         for sent in sents:
             for i in range(len(sent) - n + 1):
@@ -340,9 +339,6 @@ class BackOffNGram(NGram):
                     # since the unigram ('</s>',), doesn't forms part of a greater k-gram
                     # we have to add it by hand
                 counts[('</s>',)]=len(sents)
-        sents = list(map((lambda x: x + ['</s>']), sents))
-        # for defining A and B sets
-
 
     def count_star(self, tokens):
         """
@@ -437,9 +433,14 @@ class BackOffNGram(NGram):
         if len(prev_tokens) > 1:
 
             # recursive call
+
             q_D = self.cond_prob(token, prev_tokens[1:])
             denom_factor = self.denom(prev_tokens)
-            result = alpha * q_D / denom_factor
+            if denom_factor:
+                result = alpha * q_D / denom_factor
+            else:
+
+                result = 0
         return result
 
 
@@ -450,7 +451,7 @@ class BackOffNGram(NGram):
         """
         B_set = self.B(tokens)
         sum = 0
-        print(B_set)
+
         for elem in B_set:
             sum += self.cond_prob(elem,tokens[1:])
 
