@@ -11,7 +11,7 @@ Options:
 
 from docopt import docopt
 import pickle
-from languagemodeling.ngram import NGram
+from languagemodeling.ngram import NGram, AddOneNGram, InterpolatedNGram, BackOffNGram
 from nltk.corpus import PlaintextCorpusReader
 
 

@@ -157,7 +157,7 @@ class InterpolatedNGram(AddOneNGram):
             self.voc = self.voc.union(set(s))
 
 
-        if gamma == 0:
+        if gamma == 0 or gamma == None:
             self.gamma_flag = False
 
         # if not gamma given
@@ -178,10 +178,10 @@ class InterpolatedNGram(AddOneNGram):
                     for k in range(0, n+1):
                         counts[ngram[:k]] += 1
             counts[('</s>',)]=len(train_sents)
-            self.tocounts = counts
+
 
             # search for the gamma that gives best perplexity (the lower, the better)
-            gamma_candidates = [i*50 for i in range(1,150)]
+            gamma_candidates = [i*300 for i in range(1,6)]
             # xs is a list with (gamma, perplexity)
             xs = []
             for aux_gamma in gamma_candidates:
@@ -189,9 +189,9 @@ class InterpolatedNGram(AddOneNGram):
                 self.sents = train_sents
                 aux_perx = self.perplexity(held_out_sents)
                 xs.append( (aux_gamma, aux_perx) )
+            print(xs)
             xs.sort(key=lambda x: x[1])
             self.gamma = xs[0][0]
-            print(xs)
         # now that we found gamma, we initialize
 
         self.counts = counts = defaultdict(int)
@@ -308,7 +308,7 @@ class BackOffNGram(NGram):
             counts[('</s>',)]=len(train_sents)
             self.tocounts = counts
             # search for the gamma that gives best perplexity (the lower, the better)
-            beta_candidates = [i*0.1 for i in range(1,9)]
+            beta_candidates = [round(i*0.1) for i in range(1,10)]
             # xs is a list with (beta, perplexity)
             xs = []
             for aux_beta in beta_candidates:

@@ -27,13 +27,13 @@ if __name__ == '__main__':
     opts = docopt(__doc__)
 
     # load the data
-    sents = PlaintextCorpusReader('../languagemodeling/corpora/','austen-emma_training_data.txt').sents()
+    sents = PlaintextCorpusReader('../languagemodeling/corpora/','austen-emma_training_data.txt').sents()[:400]
     # train the model
-    addone = int(opts['-a'])
+    addone_flag = int(opts['-a'])
     n = int(opts['-n'])
     m = str(opts['-m'])
-    gamma = int(opts['-g'])
-    beta = int(opts['-b'])
+    gamma_val = int(opts['-g'])
+    beta_val = int(opts['-b'])
 
 
 
@@ -42,9 +42,9 @@ if __name__ == '__main__':
     elif m == 'addone':
         model = AddOneNGram(n, sents)
     elif m == 'interpolated':
-        model = InterpolatedNGram(n, sents, gamma, addone)
+        model = InterpolatedNGram(n, sents, gamma=gamma_val, addone=addone_flag)
     elif m == 'backoff':
-        model = BackOffNGram(n, sents, beta, addone)
+        model = BackOffNGram(n, sents, beta=beta_val, addone=addone_flag)
     else:
         raise ValueError('That model you are looking for, is not implemented yet...')
     # save it
