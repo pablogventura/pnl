@@ -157,11 +157,11 @@ class InterpolatedNGram(AddOneNGram):
             self.voc = self.voc.union(set(s))
 
 
-        if gamma == None:
+        if gamma == 0:
             self.gamma_flag = False
 
         # if not gamma given
-        if gamma == None:
+        if not self.gamma_flag:
             total_sents = len(sents)
             aux = int(total_sents * 90 / 100)
             # 90 per cent por training
@@ -181,7 +181,7 @@ class InterpolatedNGram(AddOneNGram):
             self.tocounts = counts
 
             # search for the gamma that gives best perplexity (the lower, the better)
-            gamma_candidates = [i*250 for i in range(1,15)]
+            gamma_candidates = [i*50 for i in range(1,150)]
             # xs is a list with (gamma, perplexity)
             xs = []
             for aux_gamma in gamma_candidates:
@@ -191,7 +191,7 @@ class InterpolatedNGram(AddOneNGram):
                 xs.append( (aux_gamma, aux_perx) )
             xs.sort(key=lambda x: x[1])
             self.gamma = xs[0][0]
-
+            print(xs)
         # now that we found gamma, we initialize
 
         self.counts = counts = defaultdict(int)
