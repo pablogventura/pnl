@@ -134,7 +134,7 @@ class AddOneNGram(NGram):
         return len(self.voc)
 
 
-class InterpolatedNGram(AddOneNGram):
+class InterpolatedNGram(NGram):
 
     def __init__(self, n, sents, gamma=None, addone=True):
         """
@@ -148,7 +148,7 @@ class InterpolatedNGram(AddOneNGram):
         self.sents = sents
         self.gamma = gamma
         self.addone = addone
-        self.voc = set(['</s>'])
+        self.voc = {'</s>'}
         self.counts = counts = defaultdict(int)
         self.lambda_list = []
         self.gamma_flag = True
@@ -178,7 +178,7 @@ class InterpolatedNGram(AddOneNGram):
                     for k in range(0, n+1):
                         counts[ngram[:k]] += 1
             counts[('</s>',)]=len(train_sents)
-
+            self.tocounts=counts
 
             # search for the gamma that gives best perplexity (the lower, the better)
             gamma_candidates = [i*300 for i in range(1,6)]
@@ -263,6 +263,12 @@ class InterpolatedNGram(AddOneNGram):
         for j in range(0,n):
             prob += ML_probs[j+1]*lambdas[j]
         return prob
+
+
+    def V(self):
+        """Size of the vocabulary.
+        """
+        return len(self.voc)
 
 
 
