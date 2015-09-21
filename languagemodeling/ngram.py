@@ -135,7 +135,7 @@ class AddOneNGram(NGram):
         return len(self.voc)
 
 
-class InterpolatedNGram(NGram):
+class InterpolatedNGram(AddOneNGram):
 
     def __init__(self, n, sents, gamma=None, addone=True):
         """
@@ -146,7 +146,6 @@ class InterpolatedNGram(NGram):
         addone -- whether to use addone smoothing (default: True).
         """
         self.n = n
-
         self.gamma = gamma
         self.addone = addone
         self.voc = {'</s>'}
@@ -157,15 +156,14 @@ class InterpolatedNGram(NGram):
         for s in sents:
             self.voc = self.voc.union(set(s))
 
-
-        if gamma == 0 or gamma == None:
+        if gamma == None:
             self.gamma_flag = False
 
         # if not gamma given
         if not self.gamma_flag:
             total_sents = len(sents)
             aux = int(total_sents * 90 / 100)
-            # 90 per cent por training
+            # 90 per cent for training
             train_sents = sents[:aux]
             # 10 per cent for perplexity (held out data)
             held_out_sents = sents[-total_sents+aux:]
@@ -179,9 +177,10 @@ class InterpolatedNGram(NGram):
                     for k in range(0, n+1):
                         counts[ngram[:k]] += 1
             counts[('</s>',)]=len(train_sents)
+            # variable only for tests
             self.tocounts=counts
 
-            # search for the gamma that gives best perplexity (the lower, the better)
+            # search the gamma that gives best perplexity (the lower, the better)
             gamma_candidates = [i*300 for i in range(1,6)]
             # xs is a list with (gamma, perplexity)
             xs = []
@@ -193,21 +192,20 @@ class InterpolatedNGram(NGram):
             xs.sort(key=lambda x: x[1])
             self.gamma = xs[0][0]
         # now that we found gamma, we initialize
-
+        # new dict
         self.counts = counts = defaultdict(int)
         sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
         sents = list(map((lambda x: x + ['</s>']), sents))
-
 
         for sent in sents:
             for i in range(len(sent) - n + 1):
                 ngram = tuple(sent[i: i + n])
                 # for each ngram, count its smaller parts, from right to left
-                # eg, (u,v,w) saves: (u,v,w),(u,v),(w) and ()
+                # eg,given the trigram (u,v,w),we save: (u,v,w),(u,v),(w) and ()
                 for k in range(0, n+1):
                     counts[ngram[:k]] += 1
-                    # since the unigram ('</s>',), doesn't forms part of a greater k-gram
-                    # we have to add it by hand
+                # since the unigram ('</s>',), doesn't forms part of a greater k-gram
+                # we have to add it by hand
                 counts[('</s>',)]=len(sents)
 
     def cond_prob(self, token, prev_tokens=None):
@@ -219,29 +217,28 @@ class InterpolatedNGram(NGram):
         addone = self.addone
         n = self.n
         gamma = self.gamma
-        #
+
         if not prev_tokens:
             prev_tokens = []
             assert len(prev_tokens) == n - 1
-
 
         lambdas = []
         for i in range(0, n-1):
             # 1 - sum(previous lambdas)
             aux_lambda = 1 - sum(lambdas[:i])
-            # counts
+            # counts for numerator
             counts_top = self.count(tuple(prev_tokens[i:n-1]))
-            # counts plus gamma
+            # counts plus gamma (denominator)
             counts_w_gamma = self.count(tuple(prev_tokens[i:n-1])) + gamma
-            # with fritas
+            # save the computed i-th lambda
             lambdas.append(aux_lambda * counts_top / counts_w_gamma)
+        # last lambda, by hand
         lambdas.append(1-sum(lambdas))
 
-
+        # Maximum likelihood probs
         ML_probs = dict()
         for i in range(0,n):
             if addone:
-
                 hits = self.count((tuple(prev_tokens[i:])+(token,)))
                 sub_count = self.count(tuple(prev_tokens[i:]))
                 if not sub_count:
@@ -249,14 +246,14 @@ class InterpolatedNGram(NGram):
                 else:
                     result = (hits+1) / (float(sub_count)+len(self.voc))
             else:
-
                 hits = self.count((tuple(prev_tokens[i:])+(token,)))
                 sub_count = self.count(tuple(prev_tokens[i:]))
                 if not sub_count:
                     result = 0
                 else:
                     result = hits / float(sub_count)
-            
+            # the (i+1)-th element in ML_probs holds the q_ML value
+            # for a (n-i)-gram
             ML_probs[i+1] = result
 
         prob = 0
@@ -264,14 +261,6 @@ class InterpolatedNGram(NGram):
         for j in range(0,n):
             prob += ML_probs[j+1]*lambdas[j]
         return prob
-
-
-    def V(self):
-        """Size of the vocabulary.
-        """
-        return len(self.voc)
-
-
 
 class BackOffNGram(NGram):
 
@@ -347,16 +336,15 @@ class BackOffNGram(NGram):
                     # we have to add it by hand
                 counts[('</s>',)]=len(sents)
 
+    # c*() counts
     def count_star(self, tokens):
         """
         Discounting counts for counts > 0
         """
         return self.counts[tokens] - self.beta
 
-
     def A(self, tokens):
         """Set of words with counts > 0 for a k-gram with 0 < k < n.
- 
         tokens -- the k-gram tuple.
         """
 
@@ -366,14 +354,12 @@ class BackOffNGram(NGram):
 
     def B(self, tokens):
         """Set of words with counts = 0 for a k-gram with 0 < k < n.
-
         tokens -- the k-gram tuple.
         """
         return self.voc - self.A(tokens)
 
     def alpha(self, tokens):
         """Missing probability mass for a k-gram with 0 < k < n.
- 
         tokens -- the k-gram tuple.
         """
         if not tokens:
@@ -383,7 +369,6 @@ class BackOffNGram(NGram):
 
         for elem in A_set:
             sum += self.count_star(tuple(tokens)+(elem,)) / self.count(tuple(tokens))
-
         return 1 - sum
 
 

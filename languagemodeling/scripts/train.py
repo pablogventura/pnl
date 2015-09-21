@@ -25,31 +25,33 @@ from languagemodeling.ngram import NGram, AddOneNGram, InterpolatedNGram, BackOf
 
 if __name__ == '__main__':
     opts = docopt(__doc__)
-
     # load the data
     sents = PlaintextCorpusReader('../languagemodeling/corpora/','training_corpus.txt').sents()
-    # train the model
-    addone_flag = int(opts['-a'])
     n = int(opts['-n'])
-    m = str(opts['-m'])
-    gamma_val = int(opts['-g'])
-    beta_val = int(opts['-b'])
-
-
-
+    m = opts['-m']
+    # set parameters
+    gamma_param = None
+    beta_param = None
+    addone_param = True
+    if int(opts['-g']):
+        gamma_param = int(opts['-g'])
+    if float(opts['-b']):
+        beta_param = float(opts['-b'])
+    if int(opts['-a']):
+        addone_param = int(opts['-a'])
+    # create the model
     if m == 'ngram':
         model = NGram(n, sents)
     elif m == 'addone':
         model = AddOneNGram(n, sents)
     elif m == 'interpolated':
-        model = InterpolatedNGram(n, sents, gamma=gamma_val, addone=addone_flag)
+        model = InterpolatedNGram(n, sents, gamma=gamma_param, addone=addone_param)
     elif m == 'backoff':
-        model = BackOffNGram(n, sents, beta=beta_val, addone=addone_flag)
+        model = BackOffNGram(n, sents, beta=beta_param, addone=addone_param)
     else:
         raise ValueError('That model you are looking for, is not implemented yet...')
     # save it
     filename = opts['-o']
     f = open(filename, 'wb')
-
     pickle.dump(model, f)
     f.close()

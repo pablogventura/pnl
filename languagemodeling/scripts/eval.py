@@ -25,5 +25,4 @@ if __name__ == '__main__':
 
     test_data = PlaintextCorpusReader('../languagemodeling/corpora/','test_corpus.txt').sents()
 
-
     print("perplexity: ",model.perplexity(test_data))
