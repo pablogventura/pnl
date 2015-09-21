@@ -469,17 +469,18 @@ class NGramGenerator(object):
         # suf, list of sentences with length n (of a n-gram model)
         suf = [elem for elem in model.counts.keys() if len(elem) == model.n]
 
-        # FIX ME ASAP!!!!!
-        for prefix in pre:
-            probs[prefix] = {sufix[-1]:model.cond_prob(sufix[-1],prefix) for sufix in suf if prefix==sufix[:-1]}
+        for elem in suf:
+            prfx = elem[:-1]
+            sfx = elem[-1]
+            if prfx in probs:
+                aux = probs[prfx]
+                probs[prfx] = {sfx:model.cond_prob(sfx,prfx)}
+                probs[prfx].update(aux)
+            else:
+                probs[prfx] = {sfx:model.cond_prob(sfx,prfx)}
 
-
-        aux1 = list(probs.keys())
-        sp = [list(probs[x].items()) for x in aux1]
-
-        self.sorted_probs = {aux1[i]:sorted(sp[i],key=lambda x: (-x[1], x[0])) for i in range(len(sp))}
-
-
+        sp = [list(probs[x].items()) for x in pre]
+        self.sorted_probs = {pre[i]:sorted(sp[i],key=lambda x: (-x[1], x[0])) for i in range(len(sp))}
 
     def generate_sent(self):
         """Randomly generate a sentence."""
