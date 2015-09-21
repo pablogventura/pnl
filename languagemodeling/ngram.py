@@ -145,7 +145,7 @@ class InterpolatedNGram(NGram):
         addone -- whether to use addone smoothing (default: True).
         """
         self.n = n
-        self.sents = sents
+
         self.gamma = gamma
         self.addone = addone
         self.voc = {'</s>'}
@@ -186,7 +186,7 @@ class InterpolatedNGram(NGram):
             xs = []
             for aux_gamma in gamma_candidates:
                 self.gamma = aux_gamma
-                self.sents = train_sents
+                sents = train_sents
                 aux_perx = self.perplexity(held_out_sents)
                 xs.append( (aux_gamma, aux_perx) )
             print(xs)
