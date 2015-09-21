@@ -23,7 +23,7 @@ if __name__ == '__main__':
     filename = opts['-i']
     model = pickle.load(open(filename,'rb'))
 
-    test_data = PlaintextCorpusReader('../languagemodeling/corpora/','austen-emma_test_data.txt').sents()
+    test_data = PlaintextCorpusReader('../languagemodeling/corpora/','test_corpus.txt').sents()
 
 
     print("perplexity: ",model.perplexity(test_data))

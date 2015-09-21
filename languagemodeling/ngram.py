@@ -81,6 +81,7 @@ class NGram(object):
 
         for i in range(self.n-1, len(sent)-self.n+1):
             c_p = self.cond_prob(sent[i], tuple(sent[i-self.n+1:i]))
+            # to catch a math error
             if not c_p:
                 return float('-inf')
             prob += log(c_p,2)
@@ -189,7 +190,6 @@ class InterpolatedNGram(NGram):
                 sents = train_sents
                 aux_perx = self.perplexity(held_out_sents)
                 xs.append( (aux_gamma, aux_perx) )
-            print(xs)
             xs.sort(key=lambda x: x[1])
             self.gamma = xs[0][0]
         # now that we found gamma, we initialize
@@ -197,6 +197,7 @@ class InterpolatedNGram(NGram):
         self.counts = counts = defaultdict(int)
         sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
         sents = list(map((lambda x: x + ['</s>']), sents))
+
 
         for sent in sents:
             for i in range(len(sent) - n + 1):

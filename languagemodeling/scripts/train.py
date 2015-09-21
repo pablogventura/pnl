@@ -27,7 +27,7 @@ if __name__ == '__main__':
     opts = docopt(__doc__)
 
     # load the data
-    sents = PlaintextCorpusReader('../languagemodeling/corpora/','austen-emma_training_data.txt').sents()[:400]
+    sents = PlaintextCorpusReader('../languagemodeling/corpora/','training_corpus.txt').sents()
     # train the model
     addone_flag = int(opts['-a'])
     n = int(opts['-n'])
