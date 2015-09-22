@@ -26,7 +26,7 @@ from languagemodeling.ngram import NGram, AddOneNGram, InterpolatedNGram, BackOf
 if __name__ == '__main__':
     opts = docopt(__doc__)
     # load the data
-    sents = PlaintextCorpusReader('../languagemodeling/corpora/','training_corpus.txt').sents()
+    sents = PlaintextCorpusReader('../languagemodeling/corpora/','training_corpus.txt').sents()[:500]
     n = int(opts['-n'])
     m = opts['-m']
     # set parameters

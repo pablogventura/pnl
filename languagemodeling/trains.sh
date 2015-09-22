@@ -24,10 +24,10 @@ python scripts/train.py -n 3 -o trained_models/m3ig -m interpolated -a 1
 echo "Training Model 4-InterpolatedNGram"
 python scripts/train.py -n 4 -o trained_models/m4ig -m interpolated -a 1
 echo "Training Model 1-BackOffNGram"
-python scripts/train.py -n 1 -o trained_models/m1bog -m backoff -a 1
+python scripts/train.py -n 1 -o trained_models/m1bog -m backoff -b 0.3 -a 1
 echo "Training Model 2-BackOffNGram"
-python scripts/train.py -n 2 -o trained_models/m2bog -m backoff -a 1
+python scripts/train.py -n 2 -o trained_models/m2bog -m backoff -b 0.3 -a 1
 echo "Training Model 3-BackOffNGram"
-python scripts/train.py -n 3 -o trained_models/m3bog -m backoff -a 1
+python scripts/train.py -n 3 -o trained_models/m3bog -m backoff -b 0.3 -a 1
 echo "Training Model 4-BackOffNGram"
-python scripts/train.py -n 4 -o trained_models/m4bog -m backoff -a 1
+python scripts/train.py -n 4 -o trained_models/m4bog -m backoff -b 0.3 -a 1
