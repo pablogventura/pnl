@@ -109,11 +109,13 @@ class AddOneNGram(NGram):
 
     def __init__(self, n, sents):
         NGram.__init__(self, n, sents)
-        self.voc = set()
+
+        voc = ['</s>']
+        for s in sents:
+            voc += s
+        self.voc = list(set(voc))
 
         sents = list(map((lambda x: x + ['</s>']), sents))
-        for s in sents:
-            self.voc = self.voc.union(set(s))
 
     def cond_prob(self, token, prev_tokens=None):
         """Conditional probability of a token.
@@ -148,13 +150,15 @@ class InterpolatedNGram(AddOneNGram):
         self.n = n
         self.gamma = gamma
         self.addone = addone
-        self.voc = {'</s>'}
         self.counts = counts = defaultdict(int)
         self.lambda_list = []
         self.gamma_flag = True
 
+        # way for efficient than use set unions
+        voc = ['</s>']
         for s in sents:
-            self.voc = self.voc.union(set(s))
+            voc += s
+        self.voc = list(set(voc))
 
         if gamma is None:
             self.gamma_flag = False
@@ -272,11 +276,12 @@ class BackOffNGram(NGram):
         self.beta = beta
         self.beta_flag = True
         self.addone = addone
-        self.voc = {'</s>'}
         self.counts = counts = defaultdict(int)
 
+        voc = ['</s>']
         for s in sents:
-            self.voc = self.voc.union(set(s))
+            voc += s
+        self.voc = set(voc)
         if beta is None:
             self.beta_flag = False
 
@@ -453,13 +458,17 @@ class NGramGenerator(object):
         for elem in suf:
             prfx = elem[:-1]
             sfx = elem[-1]
+            # if prfx already in dict, we add the new sufix and its
+            # probability and update the dict
             if prfx in probs:
                 aux = probs[prfx]
+                # probs values are dicts with (token, cond_prob of token)
                 probs[prfx] = {sfx: model.cond_prob(sfx, prfx)}
                 probs[prfx].update(aux)
             else:
                 probs[prfx] = {sfx: model.cond_prob(sfx, prfx)}
-
+        # order the dict by its values with higher probability
+        # so we can use the inverse transform method
         sp = [list(probs[x].items()) for x in pre]
         self.sorted_probs = {
             pre[i]: sorted(sp[i], key=lambda x:
@@ -486,7 +495,7 @@ class NGramGenerator(object):
         p = random()
         res = ''
         choices = self.sorted_probs[prev_tokens]
-
+        # applying the inverse transform method
         acc = choices[0][1]
         for i in range(0, len(choices)):
             if p < acc:
