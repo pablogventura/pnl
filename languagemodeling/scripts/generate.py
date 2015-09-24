@@ -29,5 +29,5 @@ if __name__ == '__main__':
 
     print("\r\nGenerando sentencias\r\n") 
     for i in range(n):
-       print(tr_model.generate_sent(),"\r\n")
+       print(' '.join(tr_model.generate_sent()),"\r\n")
     

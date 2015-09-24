@@ -148,6 +148,7 @@ class TestBackoffNGram(TestCase):
 
         alpha = 1.0 - (1.0 - 0.5) / 1.0
         denom = model.denom(('el',))
+        print(denom)
         self.assertAlmostEqual(model.alpha(('el',)), alpha)
 
         probs = {
@@ -166,6 +167,7 @@ class TestBackoffNGram(TestCase):
             self.assertAlmostEqual(model.cond_prob(token, [prev]), p, msg=(token, prev))
 
         # the sum is one:
+        print(probs)
         prob_sum = sum(probs.values())
         self.assertAlmostEqual(prob_sum, 1.0)
 

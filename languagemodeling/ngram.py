@@ -274,7 +274,7 @@ class BackOffNGram(NGram):
         self.beta_flag = True
         self.addone = addone
         self.counts = counts = defaultdict(int)
-
+        self.A_set = defaultdict(set)
         voc = ['</s>']
         for s in sents:
             voc += s
@@ -293,13 +293,17 @@ class BackOffNGram(NGram):
 
             train_sents = list(map((lambda x: ['<s>']*(n-1) + x), train_sents))
             train_sents = list(map((lambda x: x + ['</s>']), train_sents))
-
             for sent in train_sents:
-                for i in range(len(sent) - n + 1):
-                    ngram = tuple(sent[i: i + n])
-                    for k in range(0, n+1):
-                        counts[ngram[:k]] += 1
+                for j in range(n+1):
+                    for i in range(n-j, len(sent) - j + 1):
+                        ngram = tuple(sent[i: i + j])
+                        counts[ngram] += 1
+                        if j:
+                            self.A_set[ngram[:-1]].add(ngram[-1])
+            for i in range(1, n):
+                counts[('<s>',)*i] += len(train_sents)
             counts[('</s>',)] = len(train_sents)
+
             self.tocounts = counts
             # search for the beta that gives lower perplexity
             beta_candidates = [round(i*0.1) for i in range(1, 10)]
@@ -313,7 +317,6 @@ class BackOffNGram(NGram):
             xs.sort(key=lambda x: x[1])
             self.beta = xs[0][0]
 
-
         else:
             sents = list(map((lambda x: x + ['</s>']), sents))
             sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
@@ -324,10 +327,11 @@ class BackOffNGram(NGram):
                     for i in range(n-j, len(sent) - j + 1):
                         ngram = tuple(sent[i: i + j])
                         counts[ngram] += 1
-            for i in range(1,n):
-                counts[('<s>',)*i]+=len(sents)
+                        if j:
+                            self.A_set[ngram[:-1]].add(ngram[-1])
+            for i in range(1, n):
+                counts[('<s>',)*i] += len(sents)
             counts[('</s>',)] = len(sents)
-            
 
     # c*() counts
     def count_star(self, tokens):
@@ -343,13 +347,7 @@ class BackOffNGram(NGram):
 
         if not tokens:
             tokens = []
-        return {elem for elem in self.voc if self.count(tuple(tokens)+(elem,))}
-
-    def B(self, tokens):
-        """Set of words with counts = 0 for a k-gram with 0 < k < n.
-        tokens -- the k-gram tuple.
-        """
-        return self.voc - self.A(tokens)
+        return self.A_set[tuple(tokens)]
 
     def alpha(self, tokens):
         """Missing probability mass for a k-gram with 0 < k < n.
@@ -357,13 +355,12 @@ class BackOffNGram(NGram):
         """
         if not tokens:
             tokens = tuple()
-        sum = 0
-        A_set = self.A(tokens)
 
-        for elem in A_set:
-            sum += self.count_star(tuple(tokens) + (elem,)) /\
-                self.count(tuple(tokens))
-        return 1 - sum
+        A_set = self.A(tokens)
+        result = 1
+        if len(A_set):
+            result = self.beta * len(A_set) / self.count(tuple(tokens))
+        return result
 
     def cond_prob(self, token, prev_tokens=None):
         """Conditional probability of a token.
@@ -372,66 +369,44 @@ class BackOffNGram(NGram):
         """
 
         addone = self.addone
-        alpha = self.alpha(prev_tokens)
-        if not prev_tokens:
-            prev_tokens = []
-        A_set = self.A(prev_tokens)
-        B_set = self.B(prev_tokens)
-        # if we can apply discountings
+
         # unigram case
-        if not prev_tokens and addone:
-            result = (self.count((token,))+1 )/ (self.V()+self.count(()))
-        # bigram (and recursive) case
-        if not prev_tokens and not addone:
-            result = self.count((token,)) / self.count(())
+        if not prev_tokens:
+            if addone:
 
-        if len(prev_tokens) == 1:
+                result = (self.count((token,))+1) / (self.V() + self.count(()))
+            else:
 
+                result = self.count((token,)) / self.count(())
+        else:
+            A_set = self.A(prev_tokens)
+
+            # check if discounting can be applied
             if token in A_set:
                 result = self.count_star(tuple(prev_tokens) + (token,)) /\
                     self.count(tuple(prev_tokens))
             else:
-                # normalization factor (denominator)
-                norm = 0
-                for elem in B_set:
-                    norm_hits = self.count((elem,))
-                    norm_count = self.count(())
-                    if addone:
-                        norm_result = (norm_hits + 1) / (norm_count + self.V())
-                    else:
-                        norm_result = norm_hits / norm_count
-                    norm += norm_result
-                # numerator
-                hits = self.count((token,))
-                sub_count = self.count(())
-                if addone:
-                    numerator_result = (hits+1) / (sub_count+self.V())
+                # recursive call
+                q_D = self.cond_prob(token, prev_tokens[1:])
+                denom_factor = self.denom(prev_tokens)
+                if denom_factor:
+                    alpha = self.alpha(prev_tokens)
+                    result = alpha * q_D / denom_factor
                 else:
-                    numerator_result = hits / sub_count
+                    result = 0
 
-                result = alpha * numerator_result / norm
-
-        # recursive case for bigrams
-        if len(prev_tokens) > 1:
-            # recursive call
-            q_D = self.cond_prob(token, prev_tokens[1:])
-            denom_factor = self.denom(prev_tokens)
-            if denom_factor:
-                result = alpha * q_D / denom_factor
-            else:
-                result = 0
         return result
 
     def denom(self, tokens):
         """Normalization factor for a k-gram with 0 < k < n.
         tokens -- the k-gram tuple.
         """
-        B_set = self.B(tokens)
-        sum = 0
 
-        for elem in B_set:
+        sum = 0
+        A_set = self.A(tokens)
+        for elem in A_set:
             sum += self.cond_prob(elem, tokens[1:])
-        return sum
+        return 1 - sum
 
     def V(self):
         """Size of the vocabulary.
