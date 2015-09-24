@@ -98,17 +98,23 @@ Podemos observar los siguientes resultados:
 
 Modelo Addone:
 --------------
-833.015\\
-1975.822\\
+833.015
+
+1975.822
+
 13570.088 
+
 241318.215
                             
 
 Modelo Intepolated:
 -------------------
-834.657\
+834.657
+
 352.036
+
 331.694
+
 328.333
 
 
