@@ -109,7 +109,7 @@ class AddOneNGram(NGram):
 
     def __init__(self, n, sents):
         NGram.__init__(self, n, sents)
-
+        # way for efficient than using set union
         voc = ['</s>']
         for s in sents:
             voc += s
@@ -151,7 +151,6 @@ class InterpolatedNGram(AddOneNGram):
         self.gamma = gamma
         self.addone = addone
         self.counts = counts = defaultdict(int)
-        self.lambda_list = []
         self.gamma_flag = True
 
         # way for efficient than use set unions
@@ -185,7 +184,7 @@ class InterpolatedNGram(AddOneNGram):
             # variable only for tests
             self.tocounts = counts
             # search the gamma that gives lower perplexity
-            gamma_candidates = [i*66 for i in range(1, 30)]
+            gamma_candidates = [i*50 for i in range(1, 15)]
             # xs is a list with (gamma, perplexity)
             xs = []
             sents = train_sents
@@ -195,22 +194,20 @@ class InterpolatedNGram(AddOneNGram):
                 xs.append((aux_gamma, aux_perx))
             xs.sort(key=lambda x: x[1])
             self.gamma = xs[0][0]
-            print(self.gamma)
-        # now that we found gamma, we initialize
-        # new dict
-        self.counts = counts = defaultdict(int)
-        sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
-        sents = list(map((lambda x: x + ['</s>']), sents))
+        else:
+            self.counts = counts = defaultdict(int)
+            sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
+            sents = list(map((lambda x: x + ['</s>']), sents))
 
-        for sent in sents:
-            # counts now holds all k-grams for 0 < k < n + 1
-            for j in range(n+1):
-                # move along the sent saving all its j-grams
-                for i in range(n-j, len(sent) - j + 1):
-                    ngram = tuple(sent[i: i + j])
-                    counts[ngram] += 1
-        # added by hand
-        counts[('</s>',)] = len(sents)
+            for sent in sents:
+                # counts now holds all k-grams for 0 < k < n + 1
+                for j in range(n+1):
+                    # move along the sent saving all its j-grams
+                    for i in range(n-j, len(sent) - j + 1):
+                        ngram = tuple(sent[i: i + j])
+                        counts[ngram] += 1
+                        # added by hand
+                counts[('</s>',)] = len(sents)
 
     def cond_prob(self, token, prev_tokens=None):
         """Conditional probability of a token.
@@ -316,22 +313,21 @@ class BackOffNGram(NGram):
             xs.sort(key=lambda x: x[1])
             self.beta = xs[0][0]
 
-        # now that we found beta, we initialize
 
-        sents = list(map((lambda x: x + ['</s>']), sents))
-        sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
-        self.counts = counts = defaultdict(int)
+        else:
+            sents = list(map((lambda x: x + ['</s>']), sents))
+            sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
+            self.counts = counts = defaultdict(int)
 
-        for sent in sents:
-            for i in range(len(sent) - n + 1):
-                ngram = tuple(sent[i: i + n])
-                # for each ngram, count its smaller parts, from right to left
-                # eg, (u,v,w) saves: (u,v,w),(u,v),(w) and ()
-                for k in range(0, n+1):
-                    counts[ngram[:k]] += 1
-                # since the unigram '</s>' doesn't belongs to a greater k-gram
-                # we have to add it by hand
-                counts[('</s>',)] = len(sents)
+            for sent in sents:
+                for j in range(n+1):
+                    for i in range(n-j, len(sent) - j + 1):
+                        ngram = tuple(sent[i: i + j])
+                        counts[ngram] += 1
+            for i in range(1,n):
+                counts[('<s>',)*i]+=len(sents)
+            counts[('</s>',)] = len(sents)
+            
 
     # c*() counts
     def count_star(self, tokens):
@@ -383,9 +379,11 @@ class BackOffNGram(NGram):
         B_set = self.B(prev_tokens)
         # if we can apply discountings
         # unigram case
-        if not prev_tokens:
-            result = self.count((token,)) / self.count(())
+        if not prev_tokens and addone:
+            result = (self.count((token,))+1 )/ (self.V()+self.count(()))
         # bigram (and recursive) case
+        if not prev_tokens and not addone:
+            result = self.count((token,)) / self.count(())
 
         if len(prev_tokens) == 1:
 
