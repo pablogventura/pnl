@@ -77,6 +77,7 @@ Prepare my horses .
 
 Podemos apreciar, que a medida que aumenta el valor n, la coherencia de las sentencias, aumenta.
 
+
 Ejercicio 4: SUAVIZADO ADD-ONE
 ==============================
 
@@ -85,3 +86,58 @@ Heurística del modelo de ngramas. Se utiliza el algoritmo de Laplace para suavi
 
 Ejercicio 5: EVALUACIÓN DE MODELOS DE LENGUAJE
 ==============================================
+
+En este punto, evaluamos los modelos de lenguaje para ver cuán buenos nuestros modelos son prediciendo muestras.
+
+Más información: https://en.wikipedia.org/wiki/Perplexity
+
+Podemos observar los siguientes resultados:
+
+           n   |     1    |    2     |     3     |     4
+Modelo         |          |          |           |
+------         |          |          |           |
+               |          |          |           |
+Addone         | 833.015  | 1975.822 | 13570.088 | 241318.215
+               |          |          |           |
+Intepolated    | 834.657  |  352.036 |   331.694 |    328.333
+               |          |          |           |
+Backoff        | 834.657  |  273.227 |   254.692 |    261.081
+
+
+Como podemos observar, el modelo con mejor perplexity (mientras menor, mejor),
+es el modelo de Backoff.
+
+
+Ejercicio 6: SUAVIZADO POR INTERPOLACIÓN
+========================================
+
+Este modelo de ngramas, se basa en las aproximación de un parámetro q(w_n|w_1,...,w_(n-1))
+usando los parámatros de "Maximum Likelihood", o sea, parámetros de NGramas (y, de ser indicado,
+modelos de AddOne para los unigramas) de unigramas, bigramas, hasta n-gramas; dándole un peso
+a cada uno de estos parámetros con factores lambda_1, ..., lambda_n; tales que lambda_i > 0 y
+la suma de estos lambda_i sea igual a 1.
+
+Estos parámetros pueden ser calculados en base a un valor gamma, que es un parámetro del modelo.
+Si tal gamma no se provee, el modelo mismo se encarga de estimarlo.
+Los valores obtenidos de perplexity referidos en el ejercicio 5, se obtuvieron estimando un gamma
+óptimo para cada modelo de orden n.
+
+
+Ejercicio 7: SUAVIZADO POR BACKOFF CON DISCOUNTING
+==================================================
+
+Es un modelo muy usado en práctica. La motivación es no sobrestimar tanto los ngramas que se ven en el
+corpus de entrenamiento.
+El parámetro de descuento, beta, puede ser previsto, o bien, ajustado por el modelo para elegir el que
+muestre mejores resultados de perplexity.
+En los valores reflejados en el ejercicio 5, ningún beta fue dado como parámetro, en cada orden n se calculó
+el beta que mejor ajuste a los datos.
+
+
+
+--------------------------------------------------------------
+
+
+Notas: se proveen dos scripts adicionales: el script "train_models.sh" entrena modelos de los cuatro modelos
+descriptos arriba, de orden 1, 2, 3 y 4 (en los casos de interpolated y backoff, se estiman los parámetros gamma y beta automáticamente dentro de cada modelo, elegiendo el que mejor se ajuste en cada caso). Y el script "eval_models.sh" calcula la perplexity de los modelos
+entrenados con "train_models.sh".

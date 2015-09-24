@@ -50,7 +50,7 @@ class NGram(object):
         if not prev_tokens:
             assert self.n == 1
             prev_tokens = tuple()
-
+        # ngram condicional probs are based on relative counts
         hits = self.count((tuple(prev_tokens)+(token,)))
         sub_count = self.count(tuple(prev_tokens))
 
@@ -92,13 +92,12 @@ class NGram(object):
         """ Perplexity of a model.
         sents -- the test corpus as a list of sents
         """
-
+        # total words seen
         M = 0
         for sent in sents:
             M += len(sent)
-
-        l = 0.0
-
+        # cross-entropy
+        l = 0
         for sent in sents:
             l += self.sent_log_prob(sent) / M
 
@@ -109,7 +108,7 @@ class AddOneNGram(NGram):
 
     def __init__(self, n, sents):
         NGram.__init__(self, n, sents)
-        # way for efficient than using set union
+        # way more efficient than using set union
         voc = ['</s>']
         for s in sents:
             voc += s
@@ -128,7 +127,7 @@ class AddOneNGram(NGram):
 
         hits = self.count((tuple(prev_tokens)+(token,)))
         sub_count = self.count(tuple(prev_tokens))
-
+        # heuristic
         return (hits+1) / (float(sub_count)+self.V())
 
     def V(self):
@@ -153,7 +152,7 @@ class InterpolatedNGram(AddOneNGram):
         self.counts = counts = defaultdict(int)
         self.gamma_flag = True
 
-        # way for efficient than use set unions
+        # way more efficient than use set unions
         voc = ['</s>']
         for s in sents:
             voc += s
@@ -180,6 +179,7 @@ class InterpolatedNGram(AddOneNGram):
                     for i in range(n-j, len(sent) - j + 1):
                         ngram = tuple(sent[i: i + j])
                         counts[ngram] += 1
+            # added by hand
             counts[('</s>',)] = len(train_sents)
             # variable only for tests
             self.tocounts = counts
@@ -195,7 +195,6 @@ class InterpolatedNGram(AddOneNGram):
             xs.sort(key=lambda x: x[1])
             self.gamma = xs[0][0]
         else:
-            self.counts = counts = defaultdict(int)
             sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
             sents = list(map((lambda x: x + ['</s>']), sents))
 
@@ -206,8 +205,8 @@ class InterpolatedNGram(AddOneNGram):
                     for i in range(n-j, len(sent) - j + 1):
                         ngram = tuple(sent[i: i + j])
                         counts[ngram] += 1
-                        # added by hand
-                counts[('</s>',)] = len(sents)
+            # added by hand
+            counts[('</s>',)] = len(sents)
 
     def cond_prob(self, token, prev_tokens=None):
         """Conditional probability of a token.
@@ -298,6 +297,7 @@ class BackOffNGram(NGram):
                     for i in range(n-j, len(sent) - j + 1):
                         ngram = tuple(sent[i: i + j])
                         counts[ngram] += 1
+                        # for efficiency, we save the A set as a dict of sets
                         if j:
                             self.A_set[ngram[:-1]].add(ngram[-1])
             for i in range(1, n):
@@ -320,13 +320,13 @@ class BackOffNGram(NGram):
         else:
             sents = list(map((lambda x: x + ['</s>']), sents))
             sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
-            self.counts = counts = defaultdict(int)
 
             for sent in sents:
                 for j in range(n+1):
                     for i in range(n-j, len(sent) - j + 1):
                         ngram = tuple(sent[i: i + j])
                         counts[ngram] += 1
+                        # for efficiency, we save the A set as a dict of sets
                         if j:
                             self.A_set[ngram[:-1]].add(ngram[-1])
             for i in range(1, n):
@@ -358,6 +358,7 @@ class BackOffNGram(NGram):
 
         A_set = self.A(tokens)
         result = 1
+        # heuristic, way more efficient
         if len(A_set):
             result = self.beta * len(A_set) / self.count(tuple(tokens))
         return result
@@ -373,14 +374,11 @@ class BackOffNGram(NGram):
         # unigram case
         if not prev_tokens:
             if addone:
-
                 result = (self.count((token,))+1) / (self.V() + self.count(()))
             else:
-
                 result = self.count((token,)) / self.count(())
         else:
             A_set = self.A(prev_tokens)
-
             # check if discounting can be applied
             if token in A_set:
                 result = self.count_star(tuple(prev_tokens) + (token,)) /\
@@ -394,7 +392,6 @@ class BackOffNGram(NGram):
                     result = alpha * q_D / denom_factor
                 else:
                     result = 0
-
         return result
 
     def denom(self, tokens):
@@ -404,6 +401,7 @@ class BackOffNGram(NGram):
 
         sum = 0
         A_set = self.A(tokens)
+        # heuristic
         for elem in A_set:
             sum += self.cond_prob(elem, tokens[1:])
         return 1 - sum
@@ -454,6 +452,7 @@ class NGramGenerator(object):
         sent = ('<s>',)*(n-1)
         if n == 1:
             sent = ()
+        # generate until STOP symbol comes up
         while '</s>' not in sent:
             sent += (self.generate_token(sent[-n+1:]),)
         return sent[n-1:-1]
