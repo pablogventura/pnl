@@ -93,15 +93,14 @@ Más información: https://en.wikipedia.org/wiki/Perplexity
 
 Podemos observar los siguientes resultados:
 
-           n   |     1    |    2     |     3     |     4
-Modelo         |          |          |           |
-------         |          |          |           |
-               |          |          |           |
-Addone         | 833.015  | 1975.822 | 13570.088 | 241318.215
-               |          |          |           |
-Intepolated    | 834.657  |  352.036 |   331.694 |    328.333
-               |          |          |           |
-Backoff        | 834.657  |  273.227 |   254.692 |    261.081
+
+Modelo  \   n      1         2           3             4
+                                              
+Addone          833.015   1975.822    13570.088    241318.215
+                                              
+Intepolated     834.657    352.036      331.694       328.333
+                                              
+Backoff         834.657    273.227      254.692       261.081
 
 
 Como podemos observar, el modelo con mejor perplexity (mientras menor, mejor),
