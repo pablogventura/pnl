@@ -98,26 +98,26 @@ Podemos observar los siguientes resultados:
 
 Modelo Addone:
 --------------
-|833.015
-|1975.822
-|13570.088 
-|241318.215
+833.015\\
+1975.822\\
+13570.088 
+241318.215
                             
 
 Modelo Intepolated:
 -------------------
-|834.657
-|352.036
-|331.694
-|328.333
+834.657\
+352.036
+331.694
+328.333
 
 
 Modelo Backoff:
 ---------------
-|834.657
-|273.227
-|254.692
-|261.081
+834.657
+273.227
+254.692
+261.081
 
 
 Como podemos observar, el modelo con mejor perplexity (mientras menor, mejor),
