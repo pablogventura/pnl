@@ -115,8 +115,11 @@ Modelo Intepolated:
 Modelo Backoff:
 ---------------
 834.657
+
 273.227
+
 254.692
+
 261.081
 
 
