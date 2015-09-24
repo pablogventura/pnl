@@ -306,7 +306,7 @@ class BackOffNGram(NGram):
 
             self.tocounts = counts
             # search for the beta that gives lower perplexity
-            beta_candidates = [round(i*0.1) for i in range(1, 10)]
+            beta_candidates = [i*0.1 for i in range(1, 10)]
             # xs is a list with (beta, perplexity)
             xs = []
             self.sents = train_sents

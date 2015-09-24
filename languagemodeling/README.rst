@@ -10,6 +10,7 @@ Este ejercicio consistió simplemente en elegir un corpus (conjunto de sentencia
 para crear los modelos de lenguaje.
 
 Para los ejercicios se optó por un corpus de las obras del dramaturgo William Shakespeare.
+
 Ejercicio 2: MODELOS DE N-GRAMAS
 ================================
 
@@ -75,6 +76,7 @@ With him , the hour is come To do you justice , make their sire Stoop with oppre
 Prepare my horses . 
 
 Podemos apreciar, que a medida que aumenta el valor n, la coherencia de las sentencias, aumenta.
+
 Ejercicio 4: SUAVIZADO ADD-ONE
 ==============================
 
