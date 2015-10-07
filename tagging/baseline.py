@@ -35,16 +35,11 @@ class BaselineTagger:
                         self.tag_dict[tag].update({word: 1})
                 else:
                     self.tag_dict[tag] = {word: 1}
-            # words associated to a particular tag
-            sorted_tags_words = dict()
-            for tag, dict_words in self.tag_dict.items():
-                sorted_tags_words[tag] = sorted(list(dict_words.items()), key=lambda x: -x[1])
-                self.sorted_tags = sorted(list(self.t_counts.items()), key=lambda x: -x[1])
-            # tags associated to a particualr word
-            sorted_words_tags = dict()
-            for word, dict_tags in self.word_dict.items():
-                sorted_words_tags[word] = sorted(list(dict_tags.items()), key=lambda x: -x[1])
-                self.sorted_words = sorted(list(self.w_counts.items()), key=lambda x: -x[1])
+        # words associated to a particular tag
+        sorted_tags_words = dict()
+        for tag, dict_words in self.tag_dict.items():
+            sorted_tags_words[tag] = sorted(list(dict_words.items()), key=lambda x: -x[1])
+        self.sorted_tags = sorted(list(self.t_counts.items()), key=lambda x: -x[1])
 
     def tag(self, sent):
         """Tag a sentence.
