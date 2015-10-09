@@ -12,6 +12,7 @@ class BaselineTagger:
         self.t_counts = defaultdict(int)
         self.tag_dict = dict()
         self.word_dict = dict()
+        self.word_tag = dict()
         # from stats.py
         for sent in tagged_sents:
             for s in sent:
@@ -38,8 +39,12 @@ class BaselineTagger:
         # words associated to a particular tag
         sorted_tags_words = dict()
         for tag, dict_words in self.tag_dict.items():
-            sorted_tags_words[tag] = sorted(list(dict_words.items()), key=lambda x: -x[1])
-        self.sorted_tags = sorted(list(self.t_counts.items()), key=lambda x: -x[1])
+            sorted_tags_words[tag] = sorted(list(dict_words.items()), key=lambda x: (-x[1],x[0]))
+        self.sorted_tags = sorted(list(self.t_counts.items()), key=lambda x: (-x[1],x[0]))
+        # most probable tag for a word
+        for word in self.w_counts.keys():
+            self.word_tag[word] = max(self.word_dict[word].items(),key=lambda x:x[1])[0]
+
 
     def tag(self, sent):
         """Tag a sentence.
@@ -58,10 +63,7 @@ class BaselineTagger:
             return self.sorted_tags[0][0]
         # else, we return the tag most frequently for w
         else:
-            aux_dict = self.word_dict[w]
-            sorted_x = sorted(aux_dict.items(), key=operator.itemgetter(1), reverse=True)
-            return sorted_x[0][0]
-
+            return self.word_tag[w]
     def unknown(self, w):
         """Check if a word is unknown for the model.
 

@@ -63,7 +63,7 @@ if __name__ == '__main__':
         acc = float(hits) / total
 
         progress('{:3.1f}% ({:2.2f}%)'.format(float(i) * 100 / n, acc * 100))
-
+    print('')
     acc = float(hits) / total
     acc_unk = unk_hits / unk_words
     acc_knw = knw_hits / k_words
