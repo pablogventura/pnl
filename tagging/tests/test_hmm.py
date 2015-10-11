@@ -52,3 +52,25 @@ class TestHMM(TestCase):
 
         lp = hmm.log_prob(x, y)
         self.assertAlmostEqual(lp, log2(0.4 * 0.9))
+
+    # my (mini) test
+    def test_tag(self):
+        tagset = {'D', 'N', 'V'}
+        trans = {
+            ('<s>', '<s>'): {'D': 1.0},
+            ('<s>', 'D'): {'N': 1.0},
+            ('D', 'N'): {'V': 1.0},
+            ('N', 'V'): {'</s>': 1.0},
+        }
+        out = defaultdict(float, {
+            'D': {'the': 1.0},
+            'N': {'dog': 0.4, 'barks': 0.6},
+            'V': {'dog': 0.1, 'barks': 0.9},
+        })
+        hmm = HMM(3, tagset, trans, out)
+
+        x = 'the dog barks'.split()
+        y = 'D N V'.split()
+        t = hmm.tag(x)
+
+        self.assertEqual(t, y)
