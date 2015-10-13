@@ -12,14 +12,14 @@ class HMM:
         out -- output probabilities dictionary.
         """
         self.n = n
-        self.tagset = tagset
+        self.tag_set = tagset
         self.trans = trans
         self.out = out
 
     def tagset(self):
         """Returns the set of tags.
         """
-        return self.tagset
+        return self.tag_set
 
     def trans_prob(self, tag, prev_tags):
         """Probability of a tag.
@@ -95,17 +95,8 @@ class HMM:
         """Returns the most probable tagging for a sentence.
          sent -- the sentence.
         """
-        tagset = self.tagset
-        out = self.out
-        ys = []
-        for w in sent:
-            xs = []
-            for t in tagset:
-                aux = out[t]
-                if w in aux:
-                    xs += [(t, aux[w])]
-            ys.append(max(xs, key=lambda x: x[1])[0])
-        return ys
+        v = ViterbiTagger(self)
+        return v.tag(sent)
 
 
 class ViterbiTagger:
@@ -114,13 +105,55 @@ class ViterbiTagger:
         """
         hmm -- the HMM.
         """
-        pass
+        self.hmm = hmm
+        self.n = hmm.n
+        self._pi = {0: {('<s>',)*(self.n-1): (log2(1.0), []), }}
 
     def tag(self, sent):
         """Returns the most probable tagging for a sentence.
         sent -- the sentence.
         """
-        pass
+        hmm = self.hmm
+        tagset = self.hmm.tagset()
+        S = defaultdict(int)
+        S[-1] = S[0] = {'<s>'}
+
+        for j in range(1, len(sent)+1):
+            S[j] = tagset
+
+        pi = self._pi
+
+        for k in range(1, len(sent)+1):
+            for u in S[k-1]:
+                for v in S[k]:
+                    ys = []
+                    for w in S[k-2]:
+                        if (w, u) in hmm.trans:
+                            # q(v|w,u)
+                            if v in hmm.trans[(w, u)]:
+
+                                # e(x_k|v)
+                                if sent[k-1] in hmm.out[v]:
+                                    # pi(k-1,w,u)
+                                    if (w, u) in pi[k-1]:
+                                        # pi[n][w1,w2] = (prob, tag)
+                                        pi_values = pi[k-1][(w, u)]
+                                        val = pi_values[0]
+                                        tag = pi_values[1]
+                                        q = hmm.trans_prob(v, (w, u))
+                                        e = hmm.out_prob(sent[k-1], v)
+                                        ys.append((val+log2(q)+log2(e), tag))
+                    if ys:
+                        aux_tpl = max(ys, key=lambda x: x[0])
+                        aux_val = aux_tpl[0]
+                        aux_tag = aux_tpl[1]
+                        tag_sq = aux_tag+[v]
+                        pi[k] = {(u, v): (aux_val, tag_sq)}
+
+        y_tags = list(pi[len(sent)].values())[0][1]
+
+        self._pi = pi
+        return y_tags
 
 
 class MLHMM(HMM):
