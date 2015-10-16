@@ -114,9 +114,12 @@ class ViterbiTagger:
         sent -- the sentence.
         """
         hmm = self.hmm
+        n = hmm.n
         tagset = self.hmm.tagset()
         S = defaultdict(int)
-        S[-1] = S[0] = {'<s>'}
+
+        for i in range(0, n-1):
+            S[-1*i] = {'<s>'}
 
         for j in range(1, len(sent)+1):
             S[j] = tagset
@@ -131,7 +134,6 @@ class ViterbiTagger:
                         if (w, u) in hmm.trans:
                             # q(v|w,u)
                             if v in hmm.trans[(w, u)]:
-
                                 # e(x_k|v)
                                 if sent[k-1] in hmm.out[v]:
                                     # pi(k-1,w,u)
