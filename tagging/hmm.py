@@ -141,7 +141,7 @@ class ViterbiTagger:
         S_0 = S_0.difference('</s>')
         if ('</s>') in tagset:
             tagset.remove('</s>')
-        print("aca:",tagset)
+
         for j in range(1, len(sent)+1):
             S[j] = tagset
 
@@ -161,8 +161,6 @@ class ViterbiTagger:
                             # q(v|w,u)
                             if v in hmm.trans[aux_tpl]:
                                 # e(x_k|v)
-#                                print("out: {},\nsent: {}\nv: {}\nsent[k-1]: {}".format(hmm.out,sent,v,sent[k-1]))
-                                print(hmm.out,v,)
                                 if sent[k-1] in hmm.out[v]:
                                     # pi(k-1,w,u)
 
