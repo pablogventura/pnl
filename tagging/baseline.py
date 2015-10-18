@@ -64,6 +64,7 @@ class BaselineTagger:
         # else, we return the tag most frequently for w
         else:
             return self.word_tag[w]
+
     def unknown(self, w):
         """Check if a word is unknown for the model.
 
