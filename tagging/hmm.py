@@ -26,7 +26,7 @@ class HMM:
         tag -- the tag.
         prev_tags -- tuple with the previous n-1 tags (optional only if n = 1).
         """
-        print(tag,prev_tags)
+
         if not prev_tags:
             prev_tags = tuple()
         return self.trans[tuple(prev_tags)][tag]
@@ -135,51 +135,55 @@ class ViterbiTagger:
         for i in range(1, n):
             # worked on first try, good for me
             S[i-n+1] = {'<s>'}
+        # for w
         S_0 = tagset.union({'<s>'})
-        S_1 = tagset
+        # for v
+        S_0 = S_0.difference('</s>')
+        if ('</s>') in tagset:
+            tagset.remove('</s>')
+        print("aca:",tagset)
         for j in range(1, len(sent)+1):
             S[j] = tagset
 
         pi = self._pi
+        
         # possible very INEFFICIENCY
-        comb = list(itertools.combinations(S_0,n-1))
-        # n = 2
-        print(S_0)
-        print(S_1)
-        print(comb)
-        for k in range(1, len(sent)+1):
-            for u in S[k-1]:
+        xs_comb = list(itertools.combinations(list(S_0)*(n-2),n-2))
 
-                for v in S[k]:
+        for k in range(1, len(sent)+1):
+            for u in xs_comb:
+
+                for v in tagset:
                     ys = []
-                    for w in S[k-2]:
-                        if (w, u) in hmm.trans:
+                    for w in S_0:
+                        aux_tpl = (w,)+u
+                        if aux_tpl in hmm.trans:
                             # q(v|w,u)
-                            if v in hmm.trans[(w, u)]:
+                            if v in hmm.trans[aux_tpl]:
                                 # e(x_k|v)
+#                                print("out: {},\nsent: {}\nv: {}\nsent[k-1]: {}".format(hmm.out,sent,v,sent[k-1]))
+                                print(hmm.out,v,)
                                 if sent[k-1] in hmm.out[v]:
                                     # pi(k-1,w,u)
- 
-                                    if (w, u) in pi[k-1]:
+
+                                    if aux_tpl in pi[k-1]:
                                         # pi[n][w1,w2] = (prob, tag)
-                                        pi_values = pi[k-1][(w, u)]
+                                        pi_values = pi[k-1][aux_tpl]
                                         val = pi_values[0]
                                         tag = pi_values[1]
-                                        q = hmm.trans_prob(v, (w, u))
+                                        q = hmm.trans_prob(v, aux_tpl)
                                         e = hmm.out_prob(sent[k-1], v)
                                         ys.append((val+log2(q)+log2(e), tag))
 
                     if ys:
-                        print(ys)
+
                         aux_val = ys[0][0]
                         aux_tag = ys[0][1]
                         tag_sq = aux_tag+[v]
                         if k in pi:
-                            pi[k].update({(u,v):(aux_val, tag_sq)})
+                            pi[k].update({u+(v,):(aux_val, tag_sq)})
                         else:
-                            pi[k] = {(u,v):(aux_val, tag_sq)}
-        print(pi)
-
+                            pi[k] = {u+(v,):(aux_val, tag_sq)}
         y_tags = max(list(pi[len(sent)].values()))[1]
 
         self._pi = pi
@@ -202,7 +206,7 @@ class MLHMM(HMM):
         self.e_counts = e_counts = defaultdict(int)
         self.t_counts = tag_dict = defaultdict(int)
         self.trans = trans = defaultdict(int)
-        self.out = out = defaultdict(int)
+        self.out = out = {}
         self.w_counts = word_dict = defaultdict(int)
 
         # sents only of tags
