@@ -168,20 +168,19 @@ class ViterbiTagger:
                                         q = hmm.trans_prob(v, (w, u))
                                         e = hmm.out_prob(sent[k-1], v)
                                         ys.append((val+log2(q)+log2(e), tag))
-                                        print(ys)
+
                     if ys:
                         print(ys)
                         aux_val = ys[0][0]
                         aux_tag = ys[0][1]
                         tag_sq = aux_tag+[v]
                         if k in pi:
-                            pepe = list(pi[k].values())[0][0]
-                            if pepe < aux_val:
-                                pi[k] = {(u,v):(aux_val, tag_sq)}
+                            pi[k].update({(u,v):(aux_val, tag_sq)})
                         else:
                             pi[k] = {(u,v):(aux_val, tag_sq)}
         print(pi)
-        y_tags = list(pi[len(sent)].values())[0][1]
+
+        y_tags = max(list(pi[len(sent)].values()))[1]
 
         self._pi = pi
         return y_tags
