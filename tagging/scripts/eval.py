@@ -43,6 +43,7 @@ if __name__ == '__main__':
     for i, sent in enumerate(sents):
         word_sent, gold_tag_sent = zip(*sent)
         model_tag_sent = model.tag(word_sent)
+        print(model_tag_sent, gold_tag_sent, i)
         assert len(model_tag_sent) == len(gold_tag_sent), i
         for elem in sent:
             w = elem[0]

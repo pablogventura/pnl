@@ -1,6 +1,6 @@
 from collections import defaultdict
 from math import log2
-import itertools
+
 
 class HMM:
 
@@ -26,9 +26,9 @@ class HMM:
         tag -- the tag.
         prev_tags -- tuple with the previous n-1 tags (optional only if n = 1).
         """
-
         if not prev_tags:
             prev_tags = tuple()
+
         return self.trans[tuple(prev_tags)][tag]
 
     def out_prob(self, word, tag):
@@ -50,12 +50,12 @@ class HMM:
 
         # ngrams
         ys = [(y[i:i+n]) for i in range(len(y)-n+1)]
-        
+
         p = 1
         for elem in ys:
             a = elem[-1]
             b = elem[:-1]
-            p *= self.trans_prob(a,b)
+            p *= self.trans_prob(a, b)
         return p
 
     def prob(self, x, y):
@@ -83,12 +83,12 @@ class HMM:
 
         # ngrams
         ys = [(y[i:i+n]) for i in range(len(y)-n+1)]
-        
+
         p = 0
         for elem in ys:
             a = elem[-1]
             b = elem[:-1]
-            p += log2(self.trans_prob(a,b))
+            p += log2(self.trans_prob(a, b))
         return p
 
     def log_prob(self, x, y):
@@ -102,7 +102,7 @@ class HMM:
         p = 0
         for elem in xy:
             p += log2(self.out_prob(elem[0], elem[1]))
-        return p+t_prob
+        return p + t_prob
 
     def tag(self, sent):
         """Returns the most probable tagging for a sentence.
@@ -119,8 +119,6 @@ class ViterbiTagger:
         hmm -- the HMM.
         """
         self.hmm = hmm
-        self.n = hmm.n
-        self._pi = {0: {('<s>',)*(self.n-1): (log2(1.0), []), }}
 
     def tag(self, sent):
         """Returns the most probable tagging for a sentence.
@@ -130,62 +128,46 @@ class ViterbiTagger:
         n = hmm.n
         tagset = self.hmm.tagset()
 
-        S = {}
-
-        for i in range(1, n):
-            # worked on first try, good for me
-            S[i-n+1] = {'<s>'}
-        # for w
-        S_0 = tagset.union({'<s>'})
-        # for v
-        S_0 = S_0.difference('</s>')
-        if ('</s>') in tagset:
-            tagset.remove('</s>')
-
-        for j in range(1, len(sent)+1):
-            S[j] = tagset
-
-        pi = self._pi
-        
-        # possible very INEFFICIENCY
-        xs_comb = list(itertools.combinations(list(S_0)*(n-2),n-2))
+        self._pi = {0: {(('<s>',) * (n - 1)): (0, [])}}
 
         for k in range(1, len(sent)+1):
-            for u in xs_comb:
+            self._pi[k] = {}
+            word = sent[k-1]
 
-                for v in tagset:
-                    ys = []
-                    for w in S_0:
-                        aux_tpl = (w,)+u
-                        if aux_tpl in hmm.trans:
-                            # q(v|w,u)
-                            if v in hmm.trans[aux_tpl]:
-                                # e(x_k|v)
-                                if sent[k-1] in hmm.out[v]:
-                                    # pi(k-1,w,u)
+            for t in tagset:
+                # check that we can go from t to word (ie,out_prob(word,t)>0.0)
+                if t in hmm.out:
+                    if word in hmm.out[t]:
+                        prob = hmm.out_prob(word, t)
+                        for prev_tags, (log2_prob, tag_sq) in self._pi[k-1].items():
+                            # check that we can go from tag t given prev_tags
+                            if prev_tags in hmm.trans:
+                                if t in hmm.trans[prev_tags]:
+                                    trans_p = hmm.trans_prob(t, prev_tags)
+                                    # update prev tags
+                                    prv_tgs = prev_tags[1:] + (t,)
+                                    # compute new log2 prob
+                                    l2p = log2_prob + log2(prob) + log2(trans_p)
+                                    # is it the max?
+                                    if prv_tgs not in self._pi[k] or \
+                                       l2p > self._pi[k][prv_tgs][0]:
+                                        self._pi[k][prv_tgs] = (l2p, tag_sq + [t])
 
-                                    if aux_tpl in pi[k-1]:
-                                        # pi[n][w1,w2] = (prob, tag)
-                                        pi_values = pi[k-1][aux_tpl]
-                                        val = pi_values[0]
-                                        tag = pi_values[1]
-                                        q = hmm.trans_prob(v, aux_tpl)
-                                        e = hmm.out_prob(sent[k-1], v)
-                                        ys.append((val+log2(q)+log2(e), tag))
+        max_log2_prob = float('-inf')
+        result = None
+        for prev, (lp, tag_sent) in self._pi[len(sent)].items():
+            # check it's a valid transition
+            if prev in hmm.trans:
+                if '</s>' in hmm.trans[prev]:
+                    # get its probabilty
+                    p = hmm.trans_prob('</s>', prev)
+                    new_lp = lp + log2(p)
+                    # update tag_sent candidate and actual max log2 prob
+                    if new_lp > max_log2_prob:
+                        max_log2_prob = new_lp
+                        result = tag_sent
 
-                    if ys:
-
-                        aux_val = ys[0][0]
-                        aux_tag = ys[0][1]
-                        tag_sq = aux_tag+[v]
-                        if k in pi:
-                            pi[k].update({u+(v,):(aux_val, tag_sq)})
-                        else:
-                            pi[k] = {u+(v,):(aux_val, tag_sq)}
-        y_tags = max(list(pi[len(sent)].values()))[1]
-
-        self._pi = pi
-        return y_tags
+        return result
 
 
 class MLHMM(HMM):
@@ -199,8 +181,7 @@ class MLHMM(HMM):
 
         self.n = n
         self.addone = addone
-        self.q_num_counts = q_num_counts = defaultdict(int)
-        self.q_den_counts = q_den_counts = defaultdict(int)
+        self.tag_ngram_counts = tag_ngram_counts = defaultdict(int)
         self.e_counts = e_counts = defaultdict(int)
         self.t_counts = tag_dict = defaultdict(int)
         self.trans = trans = defaultdict(int)
@@ -208,61 +189,58 @@ class MLHMM(HMM):
         self.w_counts = word_dict = defaultdict(int)
 
         # sents only of tags
-        zs = []
+        sents_of_tags = []
         for tagged_sent in tagged_sents:
             ys = []
+            if n > 1:
+                ys = ['<s>'*(n-1)]
             for i in range(len(tagged_sent)):
                 # sequence of tags
-                aux_tag = tagged_sent[i][1]
-                aux_word = tagged_sent[i][0]
+                wt_tpl = tagged_sent[i]
+                e_counts[wt_tpl] += 1
+                aux_tag = wt_tpl[1]
+                aux_word = wt_tpl[0]
                 word_dict[aux_word] += 1
                 tag_dict[aux_tag] += 1
                 ys.append(aux_tag)
-            zs.append(ys)
+            ys.append('</s>')
+            sents_of_tags.append(ys)
+
         # tags_voc
-        self.tag_set = {'</s>'}.union(set(tag_dict.keys()))
+        self.tag_set = set(tag_dict.keys())
+        self.tag_voc_size = len(list(tag_dict.keys()))
 
         # list of sents, each one beign a list of tags
-        sents_of_tags = list(map((lambda x: x + ['</s>']), zs))
-        sents_of_tags = list(map((lambda x: ['<s>']*(n-1) + x), sents_of_tags))
-
-
-
-
-############ FIX INEFFICIENCY
-
-
         for sent in sents_of_tags:
             for i in range(len(sent) - n + 1):
                 # ngram of tags
                 ngram = tuple(sent[i: i + n])
-                ############## UGLY A.F.
-                q_num_counts[ngram] += 1
-                q_den_counts[ngram] += 1
-                q_den_counts[ngram[:-1]] += 1
+                tag_ngram_counts[ngram] += 1
+                tag_ngram_counts[ngram[:-1]] += 1
 
         # transition dict
-        for v in q_den_counts.keys():
-            for tag in self.tag_set:
-                aux_val = q_num_counts[v+(tag,)] /q_den_counts[v]
+        for v in list(tag_ngram_counts.keys()):
+            for tag in self.tag_set.union({'</s>'}):
+                if addone:
+                    aux_val = (tag_ngram_counts[v+(tag,)]+1) /\
+                              (tag_ngram_counts[v]+self.tag_voc_size)
+                else:
+                    aux_val = tag_ngram_counts[v+(tag,)] / tag_ngram_counts[v]
                 if aux_val:
                     if v in trans:
-                        trans[v].update({tag:aux_val})
+                        trans[v].update({tag: aux_val})
                     else:
-                        trans[v] = {tag:aux_val}
+                        trans[v] = {tag: aux_val}
 
-        for elem in tagged_sents:
-            for tpl in elem:
-                e_counts[tpl] += 1
-
+        # out prob dict
         for tag in tag_dict.keys():
             for word in word_dict.keys():
-                aux_val = e_counts[(word,tag,)] / tag_dict[tag]
+                aux_val = e_counts[(word, tag,)] / tag_dict[tag]
                 if aux_val:
                     if tag in out:
-                        out[tag].update({word:aux_val})
+                        out[tag].update({word: aux_val})
                     else:
-                        out[tag] = {word:aux_val}
+                        out[tag] = {word: aux_val}
 
     def tagset(self):
         return self.tag_set
@@ -271,9 +249,16 @@ class MLHMM(HMM):
         """Count for an k-gram for k <= n.
         tokens -- the k-gram tuple.
         """
-        return self.q_den_counts[tokens]
+        return self.tag_ngram_counts[tokens]
+
     def unknown(self, w):
         """Check if a word is unknown for the model.
         w -- the word.
         """
         return w not in self.w_counts
+
+    def out_prob(self, word, tag):
+        if not self.unknown(word):
+            return self.out[tag][word]
+        else:
+            return 1 / (len(list(self.word_counts.keys())))

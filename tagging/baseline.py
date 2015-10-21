@@ -1,5 +1,4 @@
 from collections import defaultdict
-import operator
 
 
 class BaselineTagger:
@@ -39,23 +38,23 @@ class BaselineTagger:
         # words associated to a particular tag
         sorted_tags_words = dict()
         for tag, dict_words in self.tag_dict.items():
-            sorted_tags_words[tag] = sorted(list(dict_words.items()), key=lambda x: (-x[1],x[0]))
-        self.sorted_tags = sorted(list(self.t_counts.items()), key=lambda x: (-x[1],x[0]))
+            sorted_tags_words[tag] = sorted(list(dict_words.items()),
+                                            key=lambda x: (-x[1], x[0]))
+        self.sorted_tags = sorted(list(self.t_counts.items()),
+                                  key=lambda x: (-x[1], x[0]))
         # most probable tag for a word
         for word in self.w_counts.keys():
-            self.word_tag[word] = max(self.word_dict[word].items(),key=lambda x:x[1])[0]
-
+            self.word_tag[word] = max(self.word_dict[word].items(),
+                                      key=lambda x: x[1])[0]
 
     def tag(self, sent):
         """Tag a sentence.
-
         sent -- the sentence.
         """
         return [self.tag_word(w) for w in sent]
 
     def tag_word(self, w):
         """Tag a word.
-
         w -- the word.
         """
         # if w it's unknown, return the most frequently tag
@@ -67,7 +66,6 @@ class BaselineTagger:
 
     def unknown(self, w):
         """Check if a word is unknown for the model.
-
         w -- the word.
         """
         return w not in self.w_counts
