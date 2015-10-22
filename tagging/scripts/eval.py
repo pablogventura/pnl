@@ -11,6 +11,7 @@ Options:
 from docopt import docopt
 import pickle
 import sys
+import time
 
 from corpus.ancora import SimpleAncoraCorpusReader
 
@@ -31,12 +32,15 @@ if __name__ == '__main__':
     f = open(filename, 'rb')
     model = pickle.load(f)
     f.close()
-
+    print('Loading the data')
+    a0 = time.time()
     # load the data
     files = '3LB-CAST/.*\.tbf\.xml'
     corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
     sents = list(corpus.tagged_sents())
-
+    a1 = time.time()
+    print('Data loaded. Time: {}'.format(a1-a0))
+    print('Evaluating model: {}'.format(filename))
     # tag
     hits, total, unk_words, unk_hits, knw_words, knw_hits = 0, 0, 0, 0, 0, 0
     n = len(sents)
@@ -75,3 +79,5 @@ if __name__ == '__main__':
     print('Accuracy: {:2.2f}%'.format(acc * 100))
     print('Accuracy in unknown words: {:2.2f}%'.format(acc_unk * 100))
     print('Accuracy in known words: {:2.2f}%'.format(acc_knw * 100))
+    a2 = time.time()
+    print('Evaluation finished. Time: {}'.format(round((a2-a1) / 60,2)))

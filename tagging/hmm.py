@@ -137,36 +137,30 @@ class ViterbiTagger:
             self._pi[k] = {}
             word = sent[k-1]
 
-            for t in self.hmm.tag_set:
+            for t in tagset:
                 prob = self.hmm.out_prob(word, t)
                 if prob:
                     for prev_tags, (log2_prob, tag_sq) in self._pi[k-1].items():
-                        # check that we can go from tag t given prev_tags
-                        if prev_tags in hmm.trans:
-                            if t in hmm.trans[prev_tags]:
-                                trans_p = hmm.trans_prob(t, prev_tags)
-                                # update prev tags
-                                prv_tgs = (prev_tags + (t,))[1:]
-                                # compute new log2 prob
-                                l2p = log2_prob + log2(prob) + log2(trans_p)
-                                # is it the max?
-                                if prv_tgs not in self._pi[k] or \
-                                   l2p > self._pi[k][prv_tgs][0]:
-                                    self._pi[k][prv_tgs] = (l2p, tag_sq + [t])
+                        trans_p = hmm.trans_prob(t, prev_tags)
+                        if trans_p:
+                            # update prev tags
+                            prv_tgs = (prev_tags + (t,))[1:]
+                            # compute new log2 prob
+                            l2p = log2_prob + log2(prob) + log2(trans_p)
+                            # is it the max?
+                            if prv_tgs not in self._pi[k] or \
+                               l2p > self._pi[k][prv_tgs][0]:
+                                self._pi[k][prv_tgs] = (l2p, tag_sq + [t])
 
         max_log2_prob = float('-inf')
         result = None
         for prev, (lp, tag_sent) in self._pi[len(sent)].items():
-            # check it's a valid transition
-            if prev in hmm.trans:
-                if '</s>' in hmm.trans[prev]:
-                    # get its probabilty
-                    p = hmm.trans_prob('</s>', prev)
-                    new_lp = lp + log2(p)
-                    # update tag_sent candidate and actual max log2 prob
-                    if new_lp > max_log2_prob:
-                        max_log2_prob = new_lp
-                        result = tag_sent
+            p = hmm.trans_prob('</s>', prev)
+            new_lp = lp + log2(p)
+            # update tag_sent candidate and actual max log2 prob
+            if new_lp > max_log2_prob:
+                max_log2_prob = new_lp
+                result = tag_sent
 
         return result
 
@@ -187,8 +181,6 @@ class MLHMM(HMM):
         self.tag_ngram_counts = tag_ngram_counts = defaultdict(int)
         self.tag_counts = tag_counts = defaultdict(int)
         self.out = out = defaultdict(int)
-
-
         self.word_list = []
 
         for tagged_sent in tagged_sents:
@@ -222,9 +214,6 @@ class MLHMM(HMM):
 
             self.tag_set = set(tag_counts.keys())
 
-
-
-
     def tagset(self):
         return self.tag_set
 
@@ -232,7 +221,6 @@ class MLHMM(HMM):
         """Count for an k-gram for k <= n.
         tokens -- the k-gram tuple.
         """
-
         return self.tag_ngram_counts[tokens]
 
     def unknown(self, w):
