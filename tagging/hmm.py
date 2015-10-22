@@ -136,31 +136,26 @@ class ViterbiTagger:
         for k in range(1, len(sent)+1):
             self._pi[k] = {}
             word = sent[k-1]
-            for t in tagset:
-                # check that we can go from t to word (ie,out_prob(word,t)>0.0)
-                if t in hmm.out:
-                    if word in hmm.out[t]:
 
-                        prob = hmm.out_prob(word, t)
+            for t in self.hmm.tag_set:
+                prob = self.hmm.out_prob(word, t)
+                if prob:
+                    for prev_tags, (log2_prob, tag_sq) in self._pi[k-1].items():
+                        # check that we can go from tag t given prev_tags
+                        if prev_tags in hmm.trans:
+                            if t in hmm.trans[prev_tags]:
+                                trans_p = hmm.trans_prob(t, prev_tags)
+                                # update prev tags
+                                prv_tgs = (prev_tags + (t,))[1:]
+                                # compute new log2 prob
+                                l2p = log2_prob + log2(prob) + log2(trans_p)
+                                # is it the max?
+                                if prv_tgs not in self._pi[k] or \
+                                   l2p > self._pi[k][prv_tgs][0]:
+                                    self._pi[k][prv_tgs] = (l2p, tag_sq + [t])
 
-                        for prev_tags, (log2_prob, tag_sq) in self._pi[k-1].items():
-                            # check that we can go from tag t given prev_tags
-                            if prev_tags in hmm.trans:
-                                if t in hmm.trans[prev_tags]:
-                                    trans_p = hmm.trans_prob(t, prev_tags)
-
-                                    # update prev tags
-                                    prv_tgs = (prev_tags + (t,))[1:]
-                                    # compute new log2 prob
-                                    l2p = log2_prob + log2(prob) + log2(trans_p)
-                                    # is it the max?
-                                    if prv_tgs not in self._pi[k] or \
-                                       l2p > self._pi[k][prv_tgs][0]:
-                                        self._pi[k][prv_tgs] = (l2p, tag_sq + [t])
-        print(self._pi)
         max_log2_prob = float('-inf')
         result = None
-        print(self._pi)
         for prev, (lp, tag_sent) in self._pi[len(sent)].items():
             # check it's a valid transition
             if prev in hmm.trans:
@@ -237,7 +232,7 @@ class MLHMM(HMM):
         """Count for an k-gram for k <= n.
         tokens -- the k-gram tuple.
         """
-        print(self.tag_ngram_counts)
+
         return self.tag_ngram_counts[tokens]
 
     def unknown(self, w):
@@ -271,7 +266,7 @@ class MLHMM(HMM):
         den_counts = self.tag_ngram_counts[tuple(prev_tags)]
 
         if addone:
-            S = self.tag_voc_size
+            S = self.voc_size
             return (num_counts + 1) / (den_counts + S)
         else:
             return num_counts / den_counts
