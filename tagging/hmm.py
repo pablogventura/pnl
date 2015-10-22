@@ -26,11 +26,13 @@ class HMM:
         tag -- the tag.
         prev_tags -- tuple with the previous n-1 tags (optional only if n = 1).
         """
+        result = 0
         if not prev_tags:
             prev_tags = tuple()
-
-        return self.trans[tuple(prev_tags)][tag]
-
+        if tuple(prev_tags) in self.trans:
+            if tag in self.trans[tuple(prev_tags)]:
+                result = self.trans[tuple(prev_tags)][tag]
+        return result
     def out_prob(self, word, tag):
         """Probability of a word given a tag.
         word -- the word.
@@ -156,11 +158,12 @@ class ViterbiTagger:
         result = None
         for prev, (lp, tag_sent) in self._pi[len(sent)].items():
             p = hmm.trans_prob('</s>', prev)
-            new_lp = lp + log2(p)
-            # update tag_sent candidate and actual max log2 prob
-            if new_lp > max_log2_prob:
-                max_log2_prob = new_lp
-                result = tag_sent
+            if p:
+                new_lp = lp + log2(p)
+                # update tag_sent candidate and actual max log2 prob
+                if new_lp > max_log2_prob:
+                    max_log2_prob = new_lp
+                    result = tag_sent
 
         return result
 
@@ -181,7 +184,7 @@ class MLHMM(HMM):
         self.tag_ngram_counts = tag_ngram_counts = defaultdict(int)
         self.tag_counts = tag_counts = defaultdict(int)
         self.out = out = defaultdict(int)
-        self.word_list = []
+        self.word_list = set()
 
         for tagged_sent in tagged_sents:
 
@@ -196,13 +199,10 @@ class MLHMM(HMM):
                 if not out[tag]:
                     out[tag] = defaultdict(int)
                 out[tag][word] += 1
-
-                if not word in self.word_list:
-                    self.voc_size += 1
-                    self.word_list.append(word)
+                self.word_list.add(word)
                 ys.append(tag)
             ys.append('</s>')
-
+            self.voc_size = len(self.word_list)
             for j in range(len(ys) - n + 1):
                 ngram = tuple(ys[j: j + n])
                 tag_ngram_counts[ngram] += 1
@@ -254,7 +254,7 @@ class MLHMM(HMM):
         den_counts = self.tag_ngram_counts[tuple(prev_tags)]
 
         if addone:
-            S = self.voc_size
+            S = len(self.tag_set)
             return (num_counts + 1) / (den_counts + S)
         else:
             return num_counts / den_counts
