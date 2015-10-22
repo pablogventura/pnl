@@ -7,20 +7,22 @@ Usage:
 Options:
   -m <model>    Model to use [default: base]:
                   base: Baseline
-  -n <n>        Order.
+  -n <n>        Order [default: 1].
   -a <addone>   Whether to use addone or not [default: 1]
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
 from docopt import docopt
 import pickle
+import sys
 
 from corpus.ancora import SimpleAncoraCorpusReader
 from tagging.baseline import BaselineTagger
-from tagging.hmm import MLHMM, HMM
+from tagging.hmm import MLHMM
 
 models = {
     'base': BaselineTagger,
+    'mlhmm': MLHMM,
 }
 
 
@@ -32,21 +34,20 @@ if __name__ == '__main__':
     corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
     sents = list(corpus.tagged_sents())
 
-    # set parameters
-    n = int(opts['-n'])
-
     m = opts['-m']
-    addone_param = True
+    n = int(opts['-n'])
+    addone_arg = True
+    if not opts['-a']:
+        addone_arg = False
 
-    if not int(opts['-a']):
-        addone_param = False
-
-    if m == 'BaselineTagger':
+    if m == 'base':
         modelo = BaselineTagger(sents)
-    elif m == 'MLHMM':
-        modelo = MLHMM(n=n, tagged_sents=sents, addone=addone_param)
+    elif m == 'mlhmm':
+        modelo = MLHMM(n=n, tagged_sents=sents, addone=addone_arg)
     else:
-        raise ValueError('That model you are looking for, is not implemented yet...')
+        print('\nThat model you are looking for, is not implemented... Yet...',
+              '\n\nThe available models are: {}\n'.format(list(models.keys())))
+        sys.exit()
 
     # save it
     filename = opts['-o']

@@ -38,25 +38,29 @@ if __name__ == '__main__':
     sents = list(corpus.tagged_sents())
 
     # tag
-    hits, total, unk_words, unk_hits, k_words, knw_hits = 0, 0, 0, 0, 0, 0
+    hits, total, unk_words, unk_hits, knw_words, knw_hits = 0, 0, 0, 0, 0, 0
     n = len(sents)
     for i, sent in enumerate(sents):
         word_sent, gold_tag_sent = zip(*sent)
         model_tag_sent = model.tag(word_sent)
-        print(model_tag_sent, gold_tag_sent, i)
+
         assert len(model_tag_sent) == len(gold_tag_sent), i
-        for elem in sent:
-            w = elem[0]
-            t = elem[1]
-            t_word = model.tag_word(w)
-            if model.unknown(w):
-                unk_words += 1
-                if t_word == t:
-                    unk_hits += 1
-            else:
-                k_words += 1
-                if t_word == t:
+        for j in range(len(word_sent)):
+            gold_t = gold_tag_sent[j]
+            model_t = model_tag_sent[j]
+            word = word_sent[j]
+            known_word_flag = not model.unknown(word)
+            hit_tag_flag = gold_t == model_t
+
+            if known_word_flag:
+                knw_words += 1
+                if hit_tag_flag:
                     knw_hits += 1
+            else:
+                unk_words += 1
+                if hit_tag_flag:
+                    unk_hits += 1
+
         # global score
         hits_sent = [m == g for m, g in zip(model_tag_sent, gold_tag_sent)]
         hits += sum(hits_sent)
@@ -67,7 +71,7 @@ if __name__ == '__main__':
     print('')
     acc = float(hits) / total
     acc_unk = unk_hits / unk_words
-    acc_knw = knw_hits / k_words
+    acc_knw = knw_hits / knw_words
     print('Accuracy: {:2.2f}%'.format(acc * 100))
     print('Accuracy in unknown words: {:2.2f}%'.format(acc_unk * 100))
     print('Accuracy in known words: {:2.2f}%'.format(acc_knw * 100))

@@ -36,7 +36,10 @@ class HMM:
         word -- the word.
         tag -- the tag.
         """
-        return self.out[tag][word]
+        if word in self.out[tag]:
+            return self.out[tag][word]
+        else:
+            return 0
 
     def tag_prob(self, y):
         """
@@ -133,28 +136,31 @@ class ViterbiTagger:
         for k in range(1, len(sent)+1):
             self._pi[k] = {}
             word = sent[k-1]
-
             for t in tagset:
                 # check that we can go from t to word (ie,out_prob(word,t)>0.0)
                 if t in hmm.out:
                     if word in hmm.out[t]:
+
                         prob = hmm.out_prob(word, t)
+
                         for prev_tags, (log2_prob, tag_sq) in self._pi[k-1].items():
                             # check that we can go from tag t given prev_tags
                             if prev_tags in hmm.trans:
                                 if t in hmm.trans[prev_tags]:
                                     trans_p = hmm.trans_prob(t, prev_tags)
+
                                     # update prev tags
-                                    prv_tgs = prev_tags[1:] + (t,)
+                                    prv_tgs = (prev_tags + (t,))[1:]
                                     # compute new log2 prob
                                     l2p = log2_prob + log2(prob) + log2(trans_p)
                                     # is it the max?
                                     if prv_tgs not in self._pi[k] or \
                                        l2p > self._pi[k][prv_tgs][0]:
                                         self._pi[k][prv_tgs] = (l2p, tag_sq + [t])
-
+        print(self._pi)
         max_log2_prob = float('-inf')
         result = None
+        print(self._pi)
         for prev, (lp, tag_sent) in self._pi[len(sent)].items():
             # check it's a valid transition
             if prev in hmm.trans:
@@ -178,69 +184,51 @@ class MLHMM(HMM):
         tagged_sents -- training sentences, each one being a list of pairs.
         addone -- whether to use addone smoothing (default: True).
         """
-
         self.n = n
         self.addone = addone
-        self.tag_ngram_counts = tag_ngram_counts = defaultdict(int)
         self.e_counts = e_counts = defaultdict(int)
-        self.t_counts = tag_dict = defaultdict(int)
-        self.trans = trans = defaultdict(int)
-        self.out = out = {}
-        self.w_counts = word_dict = defaultdict(int)
+        self.trans = {}
+        self.voc_size = 0
+        self.tag_ngram_counts = tag_ngram_counts = defaultdict(int)
+        self.tag_counts = tag_counts = defaultdict(int)
+        self.out = out = defaultdict(int)
 
-        # sents only of tags
-        sents_of_tags = []
+
+        self.word_list = []
+
         for tagged_sent in tagged_sents:
+
             ys = []
             if n > 1:
                 ys = ['<s>'*(n-1)]
-            for i in range(len(tagged_sent)):
-                # sequence of tags
-                wt_tpl = tagged_sent[i]
-                e_counts[wt_tpl] += 1
-                aux_tag = wt_tpl[1]
-                aux_word = wt_tpl[0]
-                word_dict[aux_word] += 1
-                tag_dict[aux_tag] += 1
-                ys.append(aux_tag)
+            for pair in tagged_sent:
+                e_counts[pair] += 1
+                word = pair[0]
+                tag = pair[1]
+                tag_counts[tag] += 1
+                if not out[tag]:
+                    out[tag] = defaultdict(int)
+                out[tag][word] += 1
+
+                if not word in self.word_list:
+                    self.voc_size += 1
+                    self.word_list.append(word)
+                ys.append(tag)
             ys.append('</s>')
-            sents_of_tags.append(ys)
 
-        # tags_voc
-        self.tag_set = set(tag_dict.keys())
-        self.tag_voc_size = len(list(tag_dict.keys()))
-
-        # list of sents, each one beign a list of tags
-        for sent in sents_of_tags:
-            for i in range(len(sent) - n + 1):
-                # ngram of tags
-                ngram = tuple(sent[i: i + n])
+            for j in range(len(ys) - n + 1):
+                ngram = tuple(ys[j: j + n])
                 tag_ngram_counts[ngram] += 1
                 tag_ngram_counts[ngram[:-1]] += 1
-
-        # transition dict
-        for v in list(tag_ngram_counts.keys()):
-            for tag in self.tag_set.union({'</s>'}):
-                if addone:
-                    aux_val = (tag_ngram_counts[v+(tag,)]+1) /\
-                              (tag_ngram_counts[v]+self.tag_voc_size)
+                if ngram[:-1] in self.trans:
+                    self.trans[ngram[:-1]].update({ngram[-1]})
                 else:
-                    aux_val = tag_ngram_counts[v+(tag,)] / tag_ngram_counts[v]
-                if aux_val:
-                    if v in trans:
-                        trans[v].update({tag: aux_val})
-                    else:
-                        trans[v] = {tag: aux_val}
+                    self.trans[ngram[:-1]] = {ngram[-1]}
 
-        # out prob dict
-        for tag in tag_dict.keys():
-            for word in word_dict.keys():
-                aux_val = e_counts[(word, tag,)] / tag_dict[tag]
-                if aux_val:
-                    if tag in out:
-                        out[tag].update({word: aux_val})
-                    else:
-                        out[tag] = {word: aux_val}
+            self.tag_set = set(tag_counts.keys())
+
+
+
 
     def tagset(self):
         return self.tag_set
@@ -249,16 +237,41 @@ class MLHMM(HMM):
         """Count for an k-gram for k <= n.
         tokens -- the k-gram tuple.
         """
+        print(self.tag_ngram_counts)
         return self.tag_ngram_counts[tokens]
 
     def unknown(self, w):
         """Check if a word is unknown for the model.
         w -- the word.
         """
-        return w not in self.w_counts
+        return w not in self.word_list
 
     def out_prob(self, word, tag):
-        if not self.unknown(word):
-            return self.out[tag][word]
+
+        if self.unknown(word):
+            return 1 / self.voc_size
         else:
-            return 1 / (len(list(self.word_counts.keys())))
+            if word in self.out[tag]:
+                n_counts = self.e_counts[(word, tag)]
+                d_counts = self.tag_counts[tag]
+                return n_counts / d_counts
+            else:
+                return 0
+
+    def trans_prob(self, tag, prev_tags):
+        """Probability of a tag.
+        tag -- the tag.
+        prev_tags -- tuple with the previous n-1 tags (optional only if n = 1).
+        """
+        if not prev_tags:
+            prev_tags = tuple()
+        addone = self.addone
+
+        num_counts = self.tag_ngram_counts[tuple(prev_tags)+(tag,)]
+        den_counts = self.tag_ngram_counts[tuple(prev_tags)]
+
+        if addone:
+            S = self.tag_voc_size
+            return (num_counts + 1) / (den_counts + S)
+        else:
+            return num_counts / den_counts
