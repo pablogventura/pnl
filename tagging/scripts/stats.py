@@ -11,7 +11,6 @@ from docopt import docopt
 
 from corpus.ancora import SimpleAncoraCorpusReader
 from collections import defaultdict
-import time
 
 if __name__ == '__main__':
     opts = docopt(__doc__)

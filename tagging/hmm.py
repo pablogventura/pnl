@@ -33,6 +33,7 @@ class HMM:
             if tag in self.trans[tuple(prev_tags)]:
                 result = self.trans[tuple(prev_tags)][tag]
         return result
+
     def out_prob(self, word, tag):
         """Probability of a word given a tag.
         word -- the word.
