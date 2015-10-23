@@ -25,9 +25,13 @@ El tag `nc`, aparece un total de 92002 veces y con un porcentaje de 17.78.
 Sus lemas más frecuentes son:
 
 el lema `años`, con una frecuencia de 849
+
 el lema `presidente`, con una frecuencia de 682
+
 el lema `millones`, con una frecuencia de 616
+
 el lema `equipo`, con una frecuencia de 457
+
 el lema `partido`, con una frecuencia de 438
 
 
@@ -35,40 +39,56 @@ El tag `sp`, aparece un total de 79904 veces y con un porcentaje total de 15.447
 Sus lemas más frecuentes son:
 
 el lema `de`, con una frecuencia de 28475
+
 el lema `en`, con una frecuencia de 12114
+
 el lema `a`, con una frecuencia de 8192
+
 el lema `del`, con una frecuencia de 6518
+
 el lema `con`, con una frecuencia de 4150
 
 El tag `da` aparece un total de 54552 veces y con un porcentaje total de 10.546.
 Sus lemas más frecuentes son:
 
 el lema `la`, con una frecuencia de 17897
+
 el lema `el`, con una frecuencia de 14524
+
 el lema `los`, con una frecuencia de 7758
+
 el lema `las`, con una frecuencia de 4882
+
 el lema `El`, con una frecuencia de 2817
 
 El tag `vm` aparece un total de 50609 veces y con un porcentaje total de 9.784.
 Sus lemas más frecuentes son:
 
 el lema `está`, con una frecuencia de 564
+
 el lema `tiene`, con una frecuencia de 511
+
 el lema `dijo`, con una frecuencia de 499
+
 el lema `puede`, con una frecuencia de 381
+
 el lema `hace`, con una frecuencia de 350
 
 El tag `aq` aparece un total de 33904 veces y con un porcentaje total de 6.554.
 Sus lemas más frecuentes son:
 
 el lema `pasado`, con una frecuencia de 393
+
 el lema `gran`, con una frecuencia de 275
+
 el lema `mayor`, con una frecuencia de 248
+
 el lema `nuevo`, con una frecuencia de 234
+
 el lema `próximo`, con una frecuencia de 213
 
 El tag `fc` aparece un total de 30148 veces y con un porcentaje total de 5.828.
-Sus lemas más frecuentes son:
+Su lema es:
 
 el lema `,`, con una frecuencia de 30148
 
@@ -76,32 +96,134 @@ El tag `np` aparece un total de 29113 veces y con un porcentaje total de 5.628.
 Sus lemas más frecuentes son:
 
 el lema `Gobierno`, con una frecuencia de 554
+
 el lema `España`, con una frecuencia de 380
+
 el lema `PP`, con una frecuencia de 234
+
 el lema `Barcelona`, con una frecuencia de 232
+
 el lema `Madrid`, con una frecuencia de 196
 
 El tag `fp` aparece un total de 21157 veces y con un porcentaje total de 4.09.
 Sus lemas más frecuentes son:
 
 el lema `.`, con una frecuencia de 17513
+
 el lema `(`, con una frecuencia de 1823
+
 el lema `)`, con una frecuencia de 1821
 
 El tag `rg` aparece un total de 15333 veces y con un porcentaje total de 2.964.
 Sus lemas más frecuentes son:
 
 el lema `más`, con una frecuencia de 1707
+
 el lema `hoy`, con una frecuencia de 772
+
 el lema `también`, con una frecuencia de 683
+
 el lema `ayer`, con una frecuencia de 593
+
 el lema `ya`, con una frecuencia de 544
 
 El tag `cc` aparece un total de 15023 veces y con un porcentaje total de 2.904.
 Sus lemas más frecuentes son:
 
 el lema `y`, con una frecuencia de 11211
+
 el lema `pero`, con una frecuencia de 938
+
 el lema `o`, con una frecuencia de 895
+
 el lema `Pero`, con una frecuencia de 323
+
 el lema `e`, con una frecuencia de 310
+
+
+
+Breve descripción de los tags:
+
+nc : nombre común,
+dd : determinante demostrativo,
+fc : el símbolo coma,
+fs : los puntos suspensivos,
+sp : preposicón adopción,
+da: determinante artículo,
+vm: verbo principal,
+aq: adjetivo calificativo,
+np: nombre propio,
+fp: el símbolo punto,
+rg: adverbio general,
+cc: conjunción coordinada.
+
+
+Niveles de ambigüedad:
+
+con 1 tag(s) hay 44109 lemas; los más frecuentes son:
+
+el lema `,`, con 30148 ocurrencias y un porcentaje de 10.4175
+
+el lema `el`, con 14524 ocurrencias y un porcentaje de 5.0187
+
+el lema `en`, con 12114 ocurrencias y un porcentaje de 4.1859
+
+el lema `con`, con 4150 ocurrencias y un porcentaje de 1.434
+
+el lema `por`, con 4087 ocurrencias y un porcentaje de 1.4122
+
+con 2 tag(s) hay 2194 lemas; los más frecuentes son:
+
+el lema `la`, con 18100 ocurrencias y un porcentaje de 14.7375
+
+el lema `y`, con 11212 ocurrencias y un porcentaje de 9.1291
+
+el lema `"`, con 9296 ocurrencias y un porcentaje de 7.569
+
+el lema `los`, con 7824 ocurrencias y un porcentaje de 6.3705
+
+el lema `del`, con 6519 ocurrencias y un porcentaje de 5.3079
+
+con 3 tag(s) hay 153 lemas; los más frecuentes son:
+
+el lema `.`, con 17520 ocurrencias y un porcentaje de 34.6725
+
+el lema `a`, con 8200 ocurrencias y un porcentaje de 16.228
+
+el lema `un`, con 5198 ocurrencias y un porcentaje de 10.287
+
+el lema `no`, con 3300 ocurrencias y un porcentaje de 6.5308
+
+el lema `es`, con 2315 ocurrencias y un porcentaje de 4.5814
+
+con 4 tag(s) hay 19 lemas; los más frecuentes son:
+
+el lema `de`, con 28478 ocurrencias y un porcentaje de 87.2621
+
+el lema `dos`, con 917 ocurrencias y un porcentaje de 2.8099
+
+el lema `este`, con 830 ocurrencias y un porcentaje de 2.5433
+
+el lema `tres`, con 425 ocurrencias y un porcentaje de 1.3023
+
+el lema `todo`, con 393 ocurrencias y un porcentaje de 1.2042
+
+con 5 tag(s) hay 4 lemas; los más frecuentes son:
+
+el lema `que`, con 15391 ocurrencias y un porcentaje de 96.3926
+
+el lema `mismo`, con 247 ocurrencias y un porcentaje de 1.5469
+
+el lema `cinco`, con 224 ocurrencias y un porcentaje de 1.4029
+
+el lema `medio`, con 105 ocurrencias y un porcentaje de 0.6576
+
+con 6 tag(s) hay 3 lemas; los más frecuentes son:
+
+el lema `una`, con 3852 ocurrencias y un porcentaje de 65.0346
+
+el lema `como`, con 1736 ocurrencias y un porcentaje de 29.3095
+
+el lema `uno`, con 335 ocurrencias y un porcentaje de 5.6559
+
+no hay lemas con 7 o más tags.
