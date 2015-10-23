@@ -16,6 +16,7 @@ import time
 from corpus.ancora import SimpleAncoraCorpusReader
 from collections import defaultdict
 
+
 def progress(msg, width=None):
     """Ouput the progress of something on the same line."""
     if not width:
@@ -50,7 +51,6 @@ if __name__ == '__main__':
         model_tag_sent = model.tag(word_sent)
 
         assert len(model_tag_sent) == len(gold_tag_sent), i
-
 
         for j in range(len(word_sent)):
             gold_t = gold_tag_sent[j]
@@ -88,13 +88,12 @@ if __name__ == '__main__':
     print('Accuracy in unknown words: {:2.2f}%'.format(acc_unk * 100))
     print('Accuracy in known words: {:2.2f}%'.format(acc_knw * 100))
     a2 = time.time()
-    print('Evaluation finished. Time: {}\n'.format(round((a2-a1) / 60,2)))
+    print('Evaluation finished. Time: {}\n'.format(round((a2-a1) / 60, 2)))
 
     # normalize
     for k, v in cnf_matrix.items():
-        cnf_matrix[k] = round(v / errs,3)
-
+        cnf_matrix[k] = round(v / errs, 3)
 
     print("\nConfusion matrix elements:\n")
-    for k,v in cnf_matrix.items():
-        print(k ,":", v)
+    for k, v in cnf_matrix.items():
+        print(k, ":", v)

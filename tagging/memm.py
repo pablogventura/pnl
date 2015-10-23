@@ -5,11 +5,11 @@ class MEMM:
         n -- order of the model.
         tagged_sents -- list of sentences, each one being a list of pairs.
         """
- 
+        self.n = n
+
     def sents_histories(self, tagged_sents):
         """
-        Iterator over the histories of a corpus.
- 
+        Iterator over the histories of a corpus. 
         tagged_sents -- the corpus (a list of sentences)
         """
  
