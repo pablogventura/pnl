@@ -14,7 +14,7 @@ import sys
 import time
 
 from corpus.ancora import SimpleAncoraCorpusReader
-
+from collections import defaultdict
 
 def progress(msg, width=None):
     """Ouput the progress of something on the same line."""
@@ -32,16 +32,17 @@ if __name__ == '__main__':
     f = open(filename, 'rb')
     model = pickle.load(f)
     f.close()
-    print('Loading the data')
+    print('Loading the data\n')
     a0 = time.time()
     # load the data
     files = '3LB-CAST/.*\.tbf\.xml'
     corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
     sents = list(corpus.tagged_sents())
     a1 = time.time()
-    print('Data loaded. Time: {}'.format(a1-a0))
-    print('Evaluating model: {}'.format(filename))
+    print('Data loaded. Time: {}\n'.format(a1-a0))
+    print('Evaluating model: {}\n'.format(filename))
     # tag
+    cnf_matrix = defaultdict(int)
     hits, total, unk_words, unk_hits, knw_words, knw_hits = 0, 0, 0, 0, 0, 0
     n = len(sents)
     for i, sent in enumerate(sents):
@@ -49,6 +50,8 @@ if __name__ == '__main__':
         model_tag_sent = model.tag(word_sent)
 
         assert len(model_tag_sent) == len(gold_tag_sent), i
+
+
         for j in range(len(word_sent)):
             gold_t = gold_tag_sent[j]
             model_t = model_tag_sent[j]
@@ -65,6 +68,9 @@ if __name__ == '__main__':
                 if hit_tag_flag:
                     unk_hits += 1
 
+            if not hit_tag_flag:
+                cnf_matrix[(model_t, gold_t)] += 1
+
         # global score
         hits_sent = [m == g for m, g in zip(model_tag_sent, gold_tag_sent)]
         hits += sum(hits_sent)
@@ -76,8 +82,19 @@ if __name__ == '__main__':
     acc = float(hits) / total
     acc_unk = unk_hits / unk_words
     acc_knw = knw_hits / knw_words
+    errs = total - unk_hits - knw_hits
+
     print('Accuracy: {:2.2f}%'.format(acc * 100))
     print('Accuracy in unknown words: {:2.2f}%'.format(acc_unk * 100))
     print('Accuracy in known words: {:2.2f}%'.format(acc_knw * 100))
     a2 = time.time()
-    print('Evaluation finished. Time: {}'.format(round((a2-a1) / 60,2)))
+    print('Evaluation finished. Time: {}\n'.format(round((a2-a1) / 60,2)))
+
+    # normalize
+    for k, v in cnf_matrix.items():
+        cnf_matrix[k] = round(v / errs,3)
+
+
+    print("\nConfusion matrix elements:\n")
+    for k,v in cnf_matrix.items():
+        print(k ,":", v)

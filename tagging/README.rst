@@ -367,8 +367,8 @@ prev_tags:
 Devuelve el tag previo
 
 
-NPrevTags(Feature):
--------------------
+NPrevTags:
+----------
 Devuelve una tupla de los tags previos
 
         
