@@ -20,9 +20,12 @@ Tamaño del vocabulario de tags: 48
 
 
 Los 10 tags más frecuentes, ordenados de más frecuente a menos frecuente, son:
+------------------------------------------------------------------------------
+
 
 El tag `nc`, aparece un total de 92002 veces y con un porcentaje de 17.78.
 Sus lemas más frecuentes son:
+
 
 el lema `años`, con una frecuencia de 849
 
@@ -143,6 +146,7 @@ el lema `e`, con una frecuencia de 310
 
 
 Breve descripción de los tags:
+------------------------------
 
 nc : nombre común,
 dd : determinante demostrativo,
@@ -159,8 +163,10 @@ cc: conjunción coordinada.
 
 
 Niveles de ambigüedad:
+----------------------
 
 con 1 tag(s) hay 44109 lemas; los más frecuentes son:
+
 
 el lema `,`, con 30148 ocurrencias y un porcentaje de 10.4175
 
@@ -227,3 +233,32 @@ el lema `como`, con 1736 ocurrencias y un porcentaje de 29.3095
 el lema `uno`, con 335 ocurrencias y un porcentaje de 5.6559
 
 no hay lemas con 7 o más tags.
+
+
+
+Ejercicio 2: Baseline Tagger
+============================
+
+
+Implementamos un etiquetador muy básico, que para cada palabra, elige su etiqueta más probable,
+basándonos en su etiqueta más frecuente observada en el entrenamiento. Y para las palabras que son desconocidas,
+elegimos el tag más frecuente observado en todo el entrenamiento.
+
+
+Ejercicio 3: Entrenamiento y Evaluación de Taggers
+==================================================
+
+
+Se implementaron los scripts train.py y eval.py. El primero es para entrenar modelos de tagging, y el segundo para evaluar 
+la accuracy de nuestro modelo de tagging; calculamos la accuracy general (global), que son la cantidad de tags correctos
+sobre cualquier palabra, la accuracy sobre palabras conocidas, que es la cantidad de palabras conocidas taggeadas correctamente, y 
+por último, la accuracy sobre palabras desconocidas, que es la cantidad de palabras desconocidas que se taggearon correctamente.
+
+Algunos resultados del Baseline Tagger:
+---------------------------------------
+
+Global accuracy: 89.00%
+
+Accuracy in unknown words: 31.80%
+
+Accuracy in known words: 95.31%
