@@ -39,6 +39,7 @@ if __name__ == '__main__':
     files = '3LB-CAST/.*\.tbf\.xml'
     corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
     sents = list(corpus.tagged_sents())
+    tagset = set()
     a1 = time.time()
     print('Data loaded. Time: {}\n'.format(a1-a0))
     print('Evaluating model: {}\n'.format(filename))
@@ -58,7 +59,7 @@ if __name__ == '__main__':
             word = word_sent[j]
             known_word_flag = not model.unknown(word)
             hit_tag_flag = gold_t == model_t
-
+            tagset.add(model_t)
             if known_word_flag:
                 knw_words += 1
                 if hit_tag_flag:
@@ -92,8 +93,23 @@ if __name__ == '__main__':
 
     # normalize
     for k, v in cnf_matrix.items():
-        cnf_matrix[k] = round(v / errs, 3)
+        cnf_matrix[k] = v / errs
+    # complete matrix with elements without errors
+#    for t1 in tagset:
+#        for t2 in tagset:
+#            if not (t1, t2) in cnf_matrix:
+#                cnf_matrix[(t1, t2)] = -1
 
     print("\nConfusion matrix elements:\n")
-    for k, v in cnf_matrix.items():
-        print(k, ":", v)
+    print("\npair `(x, y)` means: tagged `x` when should have been tagged with `y`")
+    print("\n(if a pair `(x, y)` it's not a matrix's element, means that\n",
+          "a word `w` has never been tagged with `x` when it ",
+          "should be tagged with `y`\n",
+          "ie, the word `w` was tagged with `y` or `x` == `y`)\n")
+
+    xs = []
+    for elem in cnf_matrix.items():
+        xs.append(elem)
+    xs.sort()
+    for k, v in xs:
+        print (k, ':', v)
