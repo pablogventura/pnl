@@ -262,3 +262,116 @@ Global accuracy: 89.00%
 Accuracy in unknown words: 31.80%
 
 Accuracy in known words: 95.31%
+
+
+
+Ejercicio 4: Hidden Markov Models y Algoritmo de Viterbi
+========================================================
+
+
+Sobre Hidden Markov Models:
+---------------------------
+
+Se implementó un algoritmo de tagging (tomado de las notas de Michael Collins y de las notas de Martin Jurafsky), 
+que se basa fuertemente en los Hidden Markov Models.
+Este algoritmo a su vez, usa el algoritmo de Viterbi para crear la secuencia de tags más probable para una sentencia dada.
+
+
+Sobre Viterbi:
+--------------
+
+Como fue mencionado anteriormente, el algoritmo de Viterbi crea la secuencia de tags más probable para una sentencia cualquiera.
+Se tomó como referencia a los tests sobre Viterbi, y el pseudo código que aparece en las notas de Michael Collins.
+
+
+Ejercicio 5: HMM POS Tagger
+===========================
+
+
+Implementamos un Hidden Markov Model, cuyos parámetros se estiman usando Maximum Likelihood sobre un corpus de oraciones etiquetadas, 
+algo bastante parecido a lo que se hizo en el primer proyecto sobre modelado de lenguajes con ngramas.
+
+
+Se entrenaron modelos y evaluaron modelos, obteniendo los siguientes resultados:
+
+
+n = 1
+-----
+
+Accuracy: 89.01%
+
+Accuracy in unknown words: 31.80%
+
+Accuracy in known words: 95.32%
+
+
+n = 2
+-----
+
+Accuracy: 92.72%
+
+Accuracy in unknown words: 48.42%
+
+Accuracy in known words: 97.61%
+
+
+n = 3
+-----
+
+Accuracy: 92.76%
+
+Accuracy in unknown words: 49.63%
+
+Accuracy in known words: 97.52%
+
+
+n = 4
+-----
+
+Accuracy: 92.78%
+
+Accuracy in unknown words: 51.78%
+
+Accuracy in known words: 97.30%
+
+
+Ejercicio 6: Features para Etiquetado de Secuencias
+===================================================
+
+
+Se implementaron los siguientes features básicos:
+
+
+word_lower:
+-----------
+Pone en minúsculas la palabra
+
+
+word_istitle:
+-------------
+Indica si la palabra es un título (Primer letra en mayúscula y el resto de las letras en minúscula)
+
+
+word_isupper:
+-------------
+Indica si la palabra está toda en mayúsculas
+
+
+word_isdigit:
+-------------
+Indica si la palabra es un número
+
+
+prev_tags:
+----------
+Devuelve el tag previo
+
+
+NPrevTags(Feature):
+-------------------
+Devuelve una tupla de los tags previos
+
+        
+PrevWord(Feature):
+------------------
+Le aplica el Feature a la palabra previa
