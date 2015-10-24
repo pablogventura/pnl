@@ -56,9 +56,11 @@ class MEMM(object):
         Iterator over the histories of a corpus.
         tagged_sents -- the corpus (a list of sentences)
         """
+        ys = []
         for sent in tagged_sents:
             for hs in self.sent_histories(sent):
-                yield hs
+                ys.append(hs)
+        return ys
 
     def sent_histories(self, tagged_sent):
         """
@@ -99,7 +101,6 @@ class MEMM(object):
         for elem in tagged_sents:
             for st in self.sent_tags(elem):
                 ys.append(st)
-        #        yield st
         return ys
 
     def sent_tags(self, tagged_sent):
@@ -116,6 +117,13 @@ class MEMM(object):
         """Tag a sentence.
         sent -- the sentence.
         """
+        n = self.n
+        tag_sq = ('<s>',)*(n-1)
+        for i in range(len(sent)):
+            hs = History(sent, tag_sq, i)
+            aux_tag = self.tag_history(hs)
+            tag_sq += (aux_tag,)
+        return(list(tag_sq[(n-1):]))
 
     def tag_history(self, h):
         """Tag a history.
@@ -129,17 +137,3 @@ class MEMM(object):
         w -- the word.
         """
         return w not in self.voc
-
-"""
-class counter:
-    def init:
-        __statate__ = 0
-        __max__= n
-
-    def __next__
-    __state__ += 1
-    yield __state__
-
-
-for i in counter(10):
-"""
