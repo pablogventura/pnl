@@ -11,51 +11,54 @@ from sklearn.pipeline import Pipeline
 
 class MEMM(object):
 
-    def __init__(self, n, tagged_sents):
+    def __init__(self, n, tagged_sents, classifier='lr'):
         """
         n -- order of the model.
         tagged_sents -- list of sentences, each one being a list of pairs.
         """
         self.n = n
         self.voc = set()
-
+        # for tags
         self.ts = []
-        self.ws = []
+
+        # select classifier
+        if classifier == 'lr':
+            clf = LogisticRegression()
+        elif classifier == 'mnb':
+            clf = MultinomialNB()
+        elif classifier == 'lsvc':
+            clf = LinearSVC()
+        else:
+            raise TypeError('Classifier not found')
+
         for elem in tagged_sents:
-            # for words
-            xs = []
-            # for tags
-            ys = []
-            if n > 1:
-                ys = [('<s>',)*(n-1)]
             for w, t in elem:
                 self.voc.add(w)
-                xs.append(w)
-                ys.append((t,))
-            self.ws.append(xs)
-            self.ts.append(ys)
+                self.ts.append(t)
 
         aux_ft_1 = [word_lower, word_isdigit, word_istitle,
-                    word_isupper, prev_tags]
-        aux_ft_2 = [PrevWord(f) for f in aux_ft_1]
-        aux_ft_3 = [NPrevTags(i) for i in range(1, n)]
-
-        features = aux_ft_1 + aux_ft_2 + aux_ft_3
+                    word_isupper, prev_tags, PrevWord(word_lower)]
+        aux_ft_2 = [NPrevTags(i) for i in range(1, n)]
+        features = aux_ft_1 + aux_ft_2
 
         vector = Vectorizer(features)
+        vector.fit(self.sents_histories(tagged_sents))
         # from tutorial
-        text_clf = Pipeline([('vectorizer', vector),
-                             ('classificator', LogisticRegression()), ])
+        self.text_clf = Pipeline([('vectorizer', vector),
+                                  ('classificator', clf), ])
+
+        # train classifier
+        self.text_clf.fit(self.sents_histories(tagged_sents),
+                          self.sents_tags(tagged_sents))
 
     def sents_histories(self, tagged_sents):
         """
         Iterator over the histories of a corpus.
         tagged_sents -- the corpus (a list of sentences)
         """
-        ys = []
-        for elem in tagged_sents:
-            ys += self.sent_histories(elem)
-        return ys
+        for sent in tagged_sents:
+            for hs in self.sent_histories(sent):
+                yield hs
 
     def sent_histories(self, tagged_sent):
         """
@@ -65,14 +68,16 @@ class MEMM(object):
         n = self.n
 
         xs = tuple()
+
         histories = []
         if n > 1:
             xs = (('<s>',)*(n-1))
         ys = []
+
         for elem in tagged_sent:
             tag = elem[1]
             word = elem[0]
-            xs = xs + (tag,)
+            xs = (xs + (tag,))
             ys.append(word)
         taggram_xs = []
 
@@ -92,7 +97,9 @@ class MEMM(object):
         """
         ys = []
         for elem in tagged_sents:
-            ys += self.sent_tags(elem)
+            for st in self.sent_tags(elem):
+                ys.append(st)
+        #        yield st
         return ys
 
     def sent_tags(self, tagged_sent):
@@ -114,9 +121,25 @@ class MEMM(object):
         """Tag a history.
         h -- the history.
         """
+        # a tag secuence is like a category, so we can predict it
+        return self.text_clf.predict([h])[0]
 
     def unknown(self, w):
         """Check if a word is unknown for the model.
         w -- the word.
         """
         return w not in self.voc
+
+"""
+class counter:
+    def init:
+        __statate__ = 0
+        __max__= n
+
+    def __next__
+    __state__ += 1
+    yield __state__
+
+
+for i in counter(10):
+"""
