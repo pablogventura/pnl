@@ -5,6 +5,9 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import LinearSVC
 from tagging.features import *
 
+# from scikit tutorial
+from sklearn.pipeline import Pipeline
+
 
 class MEMM(object):
 
@@ -31,6 +34,18 @@ class MEMM(object):
                 ys.append((t,))
             self.ws.append(xs)
             self.ts.append(ys)
+
+        aux_ft_1 = [word_lower, word_isdigit, word_istitle,
+                    word_isupper, prev_tags]
+        aux_ft_2 = [PrevWord(f) for f in aux_ft_1]
+        aux_ft_3 = [NPrevTags(i) for i in range(1, n)]
+
+        features = aux_ft_1 + aux_ft_2 + aux_ft_3
+
+        vector = Vectorizer(features)
+        # from tutorial
+        text_clf = Pipeline([('vectorizer', vector),
+                             ('classificator', LogisticRegression()), ])
 
     def sents_histories(self, tagged_sents):
         """
@@ -94,7 +109,7 @@ class MEMM(object):
         """Tag a sentence.
         sent -- the sentence.
         """
-        
+
     def tag_history(self, h):
         """Tag a history.
         h -- the history.
