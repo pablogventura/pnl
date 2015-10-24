@@ -111,5 +111,5 @@ if __name__ == '__main__':
     for elem in cnf_matrix.items():
         xs.append(elem)
     xs.sort()
-    for k, v in xs:
-        print (k, ':', v)
+#    for k, v in xs:
+#        print (k, ':', v)

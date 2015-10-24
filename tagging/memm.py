@@ -118,12 +118,14 @@ class MEMM(object):
         sent -- the sentence.
         """
         n = self.n
-        tag_sq = ('<s>',)*(n-1)
+        prev_tags = ('<s>',)*(n-1)
+        tag_sq = []
         for i in range(len(sent)):
-            hs = History(sent, tag_sq, i)
+            hs = History(sent, prev_tags, i)
             aux_tag = self.tag_history(hs)
-            tag_sq += (aux_tag,)
-        return(list(tag_sq[(n-1):]))
+            tag_sq.append(aux_tag)
+            prev_tags = (prev_tags + (aux_tag,))[1:]
+        return(tag_sq)
 
     def tag_history(self, h):
         """Tag a history.
