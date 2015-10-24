@@ -37,6 +37,10 @@ class MEMM(object):
         Iterator over the histories of a corpus.
         tagged_sents -- the corpus (a list of sentences)
         """
+        ys = []
+        for elem in tagged_sents:
+            ys += self.sent_histories(elem)
+        return ys
 
     def sent_histories(self, tagged_sent):
         """
@@ -71,27 +75,33 @@ class MEMM(object):
         Iterator over the tags of a corpus.
         tagged_sents -- the corpus (a list of sentences)
         """
+        ys = []
+        for elem in tagged_sents:
+            ys += self.sent_tags(elem)
+        return ys
 
     def sent_tags(self, tagged_sent):
         """
         Iterator over the tags of a tagged sentence.
         tagged_sent -- the tagged sentence (a list of pairs (word, tag)).
         """
-        
+        ys = []
+        for w, t in tagged_sent:
+            ys.append(t)
+        return ys
+
     def tag(self, sent):
         """Tag a sentence.
- 
         sent -- the sentence.
         """
- 
+        
     def tag_history(self, h):
         """Tag a history.
         h -- the history.
         """
- 
+
     def unknown(self, w):
         """Check if a word is unknown for the model.
- 
         w -- the word.
         """
         return w not in self.voc
