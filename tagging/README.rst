@@ -530,8 +530,11 @@ Nota:
 con sus variantes (uso de addone y órdenes de n € {1,2,3,4}), y el segundo, evalúa los modelos entrenados.
 
 
+
 2. Para obtener la matriz de confusión a la hora de evaluar un modelo, usar '-m 1' al final del comando, por ejemplo,
+
    $ python scripts/eval.py -i generic_model_path -m 1.
+
 
 3. Para la matriz de confusión, se optó por imprimir las tuplas (row, column) : value, correspondientes a la matriz,
    por un tema de comodidad a la hora de leerla o buscar algún resultado en particular. También se optó por ignorar
