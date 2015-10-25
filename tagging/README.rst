@@ -534,7 +534,7 @@ Nota:
 
 2. Para obtener la matriz de confusión a la hora de evaluar un modelo, usar '-m 1' al final del comando, por ejemplo::
 
-     $ python scripts/eval.py -i generic_model_path -m 1.
+     $ python scripts/eval.py -i generic_model_path -m 1
 
 
 3. Para la matriz de confusión, se optó por imprimir las tuplas (row, column) : value, correspondientes a la matriz,
