@@ -375,3 +375,162 @@ Devuelve una tupla de los tags previos
 PrevWord(Feature):
 ------------------
 Le aplica el Feature a la palabra previa
+
+
+Ejercicio 7: Maximum Entropy Markov Models
+==========================================
+
+Calculamos la secuencia de tags más probable usando los features del ejercicio anterior y los clasificadores Logistic Regression,
+Multinomial NB, Linear SVC. A continuación, los resultados de accuracy observados usando cada clasificador con orden 1, 2, 3 y 4.
+
+
+Logistic Regression:
+--------------------
+
+
+n = 1
+.....
+
+Accuracy: 92.73%
+
+Accuracy in unknown words: 68.95%
+
+Accuracy in known words: 95.36%
+
+
+n = 2
+.....
+
+Accuracy: 91.99%
+
+Accuracy in unknown words: 68.76%
+
+Accuracy in known words: 94.55%
+
+
+n = 3
+.....
+
+Accuracy: 92.17%
+
+Accuracy in unknown words: 69.11%
+
+Accuracy in known words: 94.71%
+
+
+n = 4
+.....
+
+Accuracy: 92.24%
+
+Accuracy in unknown words: 69.64%
+
+Accuracy in known words: 94.73%
+
+
+Multinomial NB
+--------------
+
+
+n = 1
+.....
+
+Accuracy: 88.27%
+
+Accuracy in unknown words: 52.85%
+
+Accuracy in known words: 92.18%
+
+
+n = 2
+.....
+
+Accuracy: 70.53%
+
+Accuracy in unknown words: 37.77%
+
+Accuracy in known words: 74.15%
+
+
+n = 3
+.....
+
+Accuracy: 67.98%
+
+Accuracy in unknown words: 38.28%
+
+Accuracy in known words: 71.25%
+
+
+n = 4
+.....
+
+Accuracy: 64.68%
+
+Accuracy in unknown words: 40.41%
+
+Accuracy in known words: 67.36%
+
+
+Linear SVC
+----------
+
+
+n = 1
+.....
+
+Accuracy: 94.39%
+
+Accuracy in unknown words: 70.34%
+
+Accuracy in known words: 97.04%
+
+
+n = 2
+.....
+
+Accuracy: 94.27%
+
+Accuracy in unknown words: 70.47%
+
+Accuracy in known words: 96.90%
+
+
+n = 3
+.....
+
+Accuracy: 94.39%
+
+Accuracy in unknown words: 71.29%
+
+Accuracy in known words: 96.94%
+
+
+n = 4
+.....
+
+Accuracy: 94.45%
+
+Accuracy in unknown words: 71.71%
+
+Accuracy in known words: 96.96%
+
+
+
+En base a los resultados, podemos apreciar que el clasificador que con el cual se obtienen mejores resultados, 
+es el Linear SVC de orden n = 4.
+
+
+
+Nota:
+-----
+
+1) Se proveen dos scrips: train_models.sh y eval_models.sh. El primero entrena todos los modelos implementados
+con sus variantes (uso de addone y órdenes de n € {1,2,3,4}), y el segundo, evalúa los modelos entrenados.
+
+2) Para obtener la matriz de confusión a la hora de evaluar un modelo, usar '-m 1' al final del comando, por ejemplo,
+   $ python scripts/eval.py -i generic_model_path -m 1.
+
+3) Para la matriz de confusión, se optó por imprimir las tuplas (row, column) : value, correspondientes a la matriz,
+   por un tema de comodidad a la hora de leerla o buscar algún resultado en particular. También se optó por ignorar
+   las entradas de la matriz en cuyo valor (r, c) sea igual a 0.

@@ -1,11 +1,13 @@
 """Evaulate a tagger.
 
 Usage:
-  eval.py -i <file>
+  eval.py -i <file> [-m <n>]
   eval.py -h | --help
 
 Options:
   -i <file>     Tagging model file.
+  -m <n>   Whether to print the confusion matrix [default: 0]
+                at the end of the eva or not.
   -h --help     Show this screen.
 """
 from docopt import docopt
@@ -34,15 +36,13 @@ if __name__ == '__main__':
     model = pickle.load(f)
     f.close()
     print('Loading the data\n')
-    a0 = time.time()
     # load the data
     files = '3LB-CAST/.*\.tbf\.xml'
     corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
     sents = list(corpus.tagged_sents())
     tagset = set()
-    a1 = time.time()
-    print('Data loaded. Time: {}\n'.format(a1-a0))
     print('Evaluating model: {}\n'.format(filename))
+    a1 = time.time()
     # tag
     cnf_matrix = defaultdict(int)
     hits, total, unk_words, unk_hits, knw_words, knw_hits = 0, 0, 0, 0, 0, 0
@@ -88,28 +88,29 @@ if __name__ == '__main__':
     print('Accuracy: {:2.2f}%'.format(acc * 100))
     print('Accuracy in unknown words: {:2.2f}%'.format(acc_unk * 100))
     print('Accuracy in known words: {:2.2f}%'.format(acc_knw * 100))
-    a2 = time.time()
-    print('Evaluation finished. Time: {}\n'.format(round((a2-a1) / 60, 2)))
+    print('Evaluation finished. Time: {} minutes\n'.format(round((time.time() - a1) / 60, 2)))
 
-    # normalize
-    for k, v in cnf_matrix.items():
-        cnf_matrix[k] = v / errs
-    # complete matrix with elements without errors
-#    for t1 in tagset:
-#        for t2 in tagset:
-#            if not (t1, t2) in cnf_matrix:
-#                cnf_matrix[(t1, t2)] = -1
 
-    print("\nConfusion matrix elements:\n")
-    print("\npair `(x, y)` means: tagged `x` when should have been tagged with `y`")
-    print("\n(if a pair `(x, y)` it's not a matrix's element, means that\n",
-          "a word `w` has never been tagged with `x` when it ",
-          "should be tagged with `y`\n",
-          "ie, the word `w` was tagged with `y` or `x` == `y`)\n")
+    if int(opts['-m']):
+        # normalize
+        for k, v in cnf_matrix.items():
+            cnf_matrix[k] = v / errs
+        # complete matrix with elements without errors
+        #    for t1 in tagset:
+        #        for t2 in tagset:
+        #            if not (t1, t2) in cnf_matrix:
+        #                cnf_matrix[(t1, t2)] = -1
 
-    xs = []
-    for elem in cnf_matrix.items():
-        xs.append(elem)
-    xs.sort()
-#    for k, v in xs:
-#        print (k, ':', v)
+        print("\nConfusion matrix elements:\n")
+        print("\npair `(x, y)` means: tagged `x` when should have been tagged with `y`")
+        print("\n(if a pair `(x, y)` it's not a matrix's element, means that\n",
+              "a word `w` has never been tagged with `x` when it ",
+              "should be tagged with `y`\n",
+              "ie, the word `w` was tagged with `y` or `x` == `y`)\n")
+
+        xs = []
+        for elem in cnf_matrix.items():
+            xs.append(elem)
+            xs.sort()
+        for k, v in xs:
+            print (k, ':', v)
