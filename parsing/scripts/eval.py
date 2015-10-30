@@ -1,11 +1,13 @@
 """Evaulate a parser.
 
 Usage:
-  eval.py -i <file>
+  eval.py -i <file> -n <n> -m <n>
   eval.py -h | --help
 
 Options:
   -i <file>     Parsing model file.
+  -n <n>        Eval the first n sentences.
+  -m <n>        Eval only sentences of length at most m.
   -h --help     Show this screen.
 """
 from docopt import docopt
@@ -33,15 +35,18 @@ if __name__ == '__main__':
     f = open(filename, 'rb')
     model = pickle.load(f)
     f.close()
-
+    # if we want to eval all sentences, `n` arg must be `inf`
+    n = float(opts['-n'])
+    # same for sentences length
+    m = float(opts['-m'])
     print('Loading corpus...')
     files = '3LB-CAST/.*\.tbf\.xml'
     corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
-    parsed_sents = list(corpus.parsed_sents())
+    parsed_sents = [ps for ps in corpus.parsed_sents() if len(ps) <= m]
 
     print('Parsing...')
     hits, total_gold, total_model = 0, 0, 0
-    n = len(parsed_sents)
+    other_n = len(parsed_sents)
     format_str = '{:3.1f}% ({}/{}) (P={:2.2f}%, R={:2.2f}%, F1={:2.2f}%)'
     progress(format_str.format(0.0, 0, n, 0.0, 0.0, 0.0))
     for i, gold_parsed_sent in enumerate(parsed_sents):
@@ -62,7 +67,9 @@ if __name__ == '__main__':
         rec = float(hits) / total_gold * 100
         f1 = 2 * prec * rec / (prec + rec)
 
-        progress(format_str.format(float(i+1) * 100 / n, i+1, n, prec, rec, f1))
+        progress(format_str.format(float(i+1) * 100 / other_n, i+1, other_n, prec, rec, f1))
+        if i > n - 2:
+            break
 
     print('')
     print('Parsed {} sentences'.format(n))
