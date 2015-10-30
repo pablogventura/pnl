@@ -68,6 +68,7 @@ if __name__ == '__main__':
         f1 = 2 * prec * rec / (prec + rec)
 
         progress(format_str.format(float(i+1) * 100 / other_n, i+1, other_n, prec, rec, f1))
+
         if i > n - 2:
             break
 
