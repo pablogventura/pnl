@@ -46,6 +46,7 @@ if __name__ == '__main__':
 
     print('Parsing...')
     hits, total_gold, total_model = 0, 0, 0
+    unl_hits, unl_total_gold, unl_total_model = 0, 0, 0
     other_n = len(parsed_sents)
     format_str = '{:3.1f}% ({}/{}) (P={:2.2f}%, R={:2.2f}%, F1={:2.2f}%)'
     progress(format_str.format(0.0, 0, n, 0.0, 0.0, 0.0))
@@ -61,12 +62,20 @@ if __name__ == '__main__':
         hits += len(gold_spans & model_spans)
         total_gold += len(gold_spans)
         total_model += len(model_spans)
-
+        # compute unlabeled scores
+        unl_gold_spans = set([p[1:] for p in gold_spans])
+        unl_model_spans = set([p[1:] for p in model_spans])
+        unl_hits += len(unl_gold_spans & unl_model_spans)
+        unl_total_gold += len(unl_gold_spans)
+        unl_total_model += len(unl_model_spans)
         # compute labeled partial results
         prec = float(hits) / total_model * 100
         rec = float(hits) / total_gold * 100
         f1 = 2 * prec * rec / (prec + rec)
-
+        # compute unlabeled partial results
+        unl_prec = unl_hits / unl_total_model * 100
+        unl_rec = unl_hits / unl_total_gold * 100
+        unl_f1 = 2 * unl_prec * unl_rec / (unl_prec + unl_rec)
         progress(format_str.format(float(i+1) * 100 / other_n, i+1, other_n, prec, rec, f1))
 
         if i > n - 2:
@@ -78,3 +87,10 @@ if __name__ == '__main__':
     print('  Precision: {:2.2f}% '.format(prec))
     print('  Recall: {:2.2f}% '.format(rec))
     print('  F1: {:2.2f}% '.format(f1))
+
+    print('')
+    print('Parsed {} sentences'.format(n))
+    print('Unlabeled')
+    print('  Precision: {:2.2f}% '.format(unl_prec))
+    print('  Recall: {:2.2f}% '.format(unl_rec))
+    print('  F1: {:2.2f}% '.format(unl_f1))
