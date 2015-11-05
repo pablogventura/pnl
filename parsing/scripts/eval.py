@@ -76,7 +76,8 @@ if __name__ == '__main__':
         unl_prec = unl_hits / unl_total_model * 100
         unl_rec = unl_hits / unl_total_gold * 100
         unl_f1 = 2 * unl_prec * unl_rec / (unl_prec + unl_rec)
-        progress(format_str.format(float(i+1) * 100 / other_n, i+1, other_n, prec, rec, f1))
+        progress(format_str.format(float(i+1) * 100 /
+                                   other_n, i+1, other_n, prec, rec, f1))
 
         if i > n - 2:
             break

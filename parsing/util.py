@@ -1,5 +1,3 @@
-
-
 def unlexicalize(t):
     """Unlexicalize a tree. Overwrites the terminals with the pre-terminals.
 
@@ -13,8 +11,8 @@ def unlexicalize(t):
 
 
 def lexicalize(t, sent):
-    """Lexicalize a tree using a sentence. Replaces the terminals with the words
-    in the sentence.
+    """Lexicalize a tree using a sentence. Replaces the
+    terminals with the words in the sentence.
 
     t -- the tree.
     sent -- the sentence.

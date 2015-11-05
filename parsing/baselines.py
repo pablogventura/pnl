@@ -29,6 +29,7 @@ class RBranch:
         t.chomsky_normal_form(factor='right', horzMarkov=0)
         return t
 
+
 # the same [as RBranch], but different, but still the same
 class LBranch:
 

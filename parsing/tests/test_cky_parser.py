@@ -109,3 +109,56 @@ class TestCKYParser(TestCase):
                 prob1 = d1[k2]
                 prob2 = d2[k2]
                 self.assertAlmostEqual(prob1, prob2)
+
+    # Some ambiguous parsing examples
+    def test_example_1(self):
+        grammar = PCFG.fromstring(
+            """
+            S -> Adj Noun [0.8]
+            S -> Adv Noun [0.2]
+            Adj -> 'free' [1.0]
+            Adv -> 'free' [1.0]
+            Noun -> 'whales' [1.0]
+            """
+        )
+
+        parser = CKYParser(grammar)
+        sentence = 'free whales'.split()
+
+        lp, t = parser.parse(sentence)
+
+        pi = {
+            (1, 1): {'Adj': log2(1.0)},
+            (2, 2): {'Noun': log2(1.0)},
+
+            (1, 2): {'S': log2(1.0) +
+                     log2(0.8) +
+                     log2(1.0)
+                     }
+        }
+
+        self.assertEqualPi(parser._pi, pi)
+
+        bp = {
+            (1, 1): {'Adj': Tree.fromstring("(Adj free)")},
+            (2, 2): {'Noun': Tree.fromstring("(Noun whales)")},
+            (1, 2): {'S': Tree.fromstring(
+                """(S
+                    (Adj free) (Noun whales)
+                )
+                """)},
+        }
+        self.assertEqual(parser._bp, bp)
+
+        # check tree
+        t2 = Tree.fromstring(
+            """
+                (S
+                    (Adj free) (Noun whales)
+                )
+            """)
+        self.assertEqual(t, t2)
+
+        # check log probability
+        lp2 = log2(1.0 * 0.8 * 1.0)
+        self.assertAlmostEqual(lp, lp2)

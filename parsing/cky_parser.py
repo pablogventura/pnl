@@ -1,16 +1,17 @@
-from nltk.grammar import Nonterminal
 from nltk import Tree
 
 
 class CKYParser:
- 
+
     def __init__(self, grammar):
         """
         grammar -- a binarised NLTK PCFG.
         """
         self.productions = grammar.productions()
-        self.lex_N = {str(elem.lhs()) for elem in self.productions if elem.is_lexical()}
-        self.non_lex_N = {str(elem.lhs()) for elem in self.productions if elem.is_nonlexical()}
+        self.lex_N = {str(elem.lhs()) for elem in self.productions
+                      if elem.is_lexical()}
+        self.non_lex_N = {str(elem.lhs()) for elem in self.productions
+                          if elem.is_nonlexical()}
 
         non_lx = [e for e in self.productions if e.is_nonlexical()]
         lx = [e for e in self.productions if e.is_lexical()]
@@ -22,9 +23,9 @@ class CKYParser:
             rhs = (str(elem.rhs()[0]), str(elem.rhs()[1]))
             lp = elem.logprob()
             if lhs in self.q_non_lx_dict:
-                self.q_non_lx_dict[lhs].update({rhs : lp})
+                self.q_non_lx_dict[lhs].update({rhs: lp})
             else:
-                self.q_non_lx_dict[lhs] = {rhs : lp}
+                self.q_non_lx_dict[lhs] = {rhs: lp}
 
         # dict of X -> Y Z productions with its probabilities
         self.q_lx_dict = {}
@@ -33,13 +34,12 @@ class CKYParser:
             rhs = elem.rhs()
             lp = elem.logprob()
             if lhs in self.q_lx_dict:
-                self.q_lx_dict[lhs].update({rhs : lp})
+                self.q_lx_dict[lhs].update({rhs: lp})
             else:
-                self.q_lx_dict[lhs] = {rhs : lp}
-
+                self.q_lx_dict[lhs] = {rhs: lp}
 
     def parse(self, sent):
-        """Parse a sequence of terminals. 
+        """Parse a sequence of terminals.
         sent -- the sequence of terminals.
         """
 
@@ -66,8 +66,8 @@ class CKYParser:
             for nt in lex_N:
                 if (w,) in q_lx_dict[nt]:
                     lp = q_lx_dict[nt][(w,)]
-                    self._pi[(i, i)] = {nt : lp}
-                    self._bp[(i, i)] = {nt : Tree(nt, [w])}
+                    self._pi[(i, i)] = {nt: lp}
+                    self._bp[(i, i)] = {nt: Tree(nt, [w])}
 
         # RECURSIVE CASE
         for l in range(1, n):
@@ -75,7 +75,8 @@ class CKYParser:
                 j = i + l
                 for X in non_lex_N:
                     # all productions to compare
-                    prod_xs = [elem for elem in productions if str(elem.lhs()) == X]
+                    prod_xs = [elem for elem in productions
+                               if str(elem.lhs()) == X]
                     for prd in prod_xs:
                         Y = str(prd.rhs()[0])
                         Z = str(prd.rhs()[1])
@@ -84,18 +85,23 @@ class CKYParser:
                         for s in range(i, j):
                             if Y in self._pi[(i, s)]:
                                 if Z in self._pi[(s + 1, j)]:
-                                    ys.append((X, Y, Z, s, (aux_lp + self._pi[(i, s,)][Y] + self._pi[(s + 1, j,)][Z])))
+                                    ys.append(
+                                        (X, Y, Z, s,
+                                         (aux_lp +
+                                          self._pi[(i, s,)][Y] +
+                                          self._pi[(s + 1, j,)][Z]))
+                                    )
                         if ys:
-                            max_tpl = max(ys,key=lambda x:x[-1])
+                            max_tpl = max(ys, key=lambda x: x[-1])
                             nt = max_tpl[0]
                             lp = max_tpl[-1]
-                            self._pi[(i, j)] = {nt : lp}
+                            self._pi[(i, j)] = {nt: lp}
                             # backpointer
                             aux_nt_Y = max_tpl[1]
                             aux_nt_Z = max_tpl[2]
                             s = max_tpl[3]
                             l_tree = self._bp[(i, s)][aux_nt_Y]
-                            r_tree = self._bp[(s +1, j)][aux_nt_Z]
-                            self._bp[(i, j)] = {nt : Tree(nt,[l_tree, r_tree])}
+                            r_tree = self._bp[(s + 1, j)][aux_nt_Z]
+                            self._bp[(i, j)] = {nt: Tree(nt, [l_tree, r_tree])}
 
         return (self._pi[(1, n)]['S'], self._bp[1, n]['S'])
