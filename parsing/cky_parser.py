@@ -84,27 +84,18 @@ class CKYParser:
                         for s in range(i, j):
                             if Y in self._pi[(i, s)]:
                                 if Z in self._pi[(s + 1, j)]:
-                                    ys.append((X, (aux_lp + self._pi[(i, s,)][Y] + self._pi[(s + 1, j,)][Z])))
+                                    ys.append((X, Y, Z, s, (aux_lp + self._pi[(i, s,)][Y] + self._pi[(s + 1, j,)][Z])))
                         if ys:
-                            max_tpl = max(ys)
+                            max_tpl = max(ys,key=lambda x:x[-1])
                             nt = max_tpl[0]
-                            lp = max_tpl[1]
+                            lp = max_tpl[-1]
                             self._pi[(i, j)] = {nt : lp}
                             # backpointer
-                            xs_tree = []
-                            for k in range(i, j + 1):
-                                for t in range(k + 1, j + 1):
-                                    if self._bp[(k, t)]:
-                                        aux = list(self._bp[(k, t)].values())[0]
-                                        xs_tree.append((aux,[]))
-                            print('')
-                            print(xs_tree)
-                            print('')
-                            right_tree = xs_tree[0]
-                            left_tree = xs_tree[1]
-                            self._bp[(i, j)] = {nt : Tree(nt,[right_tree, left_tree])}
+                            aux_nt_Y = max_tpl[1]
+                            aux_nt_Z = max_tpl[2]
+                            s = max_tpl[3]
+                            l_tree = self._bp[(i, s)][aux_nt_Y]
+                            r_tree = self._bp[(s +1, j)][aux_nt_Z]
+                            self._bp[(i, j)] = {nt : Tree(nt,[l_tree, r_tree])}
 
-        print('')
-#        print(self._bp)
-        print('')
-        return (self._pi[(1, n)]['S'], None)
+        return (self._pi[(1, n)]['S'], self._bp[1, n]['S'])
