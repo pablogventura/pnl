@@ -1,5 +1,10 @@
 from collections import defaultdict
-from nltk.grammar import Production as P, ProbabilisticProduction as PP
+from nltk.grammar import Production as P, ProbabilisticProduction as PP,\
+    Nonterminal as N
+from .cky_parser import CKYParser
+from nltk.grammar import PCFG
+from .util import lexicalize
+from .baselines import Flat
 
 
 class UPCFG:
@@ -23,7 +28,7 @@ class UPCFG:
                     prods.append(p)
                 else:
                     a1, a2 = rhs
-                    prods.append(P(lhs, [a1,a2]))
+                    prods.append(P(lhs, [a1, a2]))
 
         self.counts = counts = defaultdict(int)
         for prd in prods:
@@ -38,10 +43,14 @@ class UPCFG:
             r = prod.rhs()
             p = counts[r] / counts[l]
             if prod.is_lexical():
-                up = PP(l,[r[0]], prob=p)
+                up = PP(l, [r[0]], prob=p)
             else:
-                up = PP(l, [r[0],r[1]], prob=p)
-            self.upgfs.append(up)
+                up = PP(l, [r[0], r[1]], prob=p)
+            if up not in self.upgfs:
+                self.upgfs.append(up)
+
+        self.parser = CKYParser(PCFG(N(start), self.upgfs))
+        self.S = start
 
     def productions(self):
         """Returns the list of UPCFG probabilistic productions.
@@ -52,3 +61,15 @@ class UPCFG:
         """Parse a tagged sentence.
         tagged_sent -- the tagged sentence (a list of pairs (word, tag)).
         """
+        sent = []
+        tag = []
+        for w, t in tagged_sent:
+            tag.append(t)
+            sent.append(w)
+
+        p, t = self.parser.parse(tag)
+
+        if t is None:
+            return Flat(None, self.S).parse(tagged_sent)
+
+        return lexicalize(t, sent)

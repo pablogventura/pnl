@@ -131,8 +131,8 @@ class TestCKYParser(TestCase):
             (1, 1): {'Adj': log2(1.0)},
             (2, 2): {'Noun': log2(1.0)},
 
-            (1, 2): {'S': log2(1.0) +
-                     log2(0.8) +
+            (1, 2): {'S': log2(0.8) +
+                     log2(1.0) +
                      log2(1.0)
                      }
         }

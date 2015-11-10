@@ -66,8 +66,13 @@ class CKYParser:
             for nt in lex_N:
                 if (w,) in q_lx_dict[nt]:
                     lp = q_lx_dict[nt][(w,)]
-                    self._pi[(i, i)] = {nt: lp}
-                    self._bp[(i, i)] = {nt: Tree(nt, [w])}
+                    if (i, i) in self._pi:
+                        self._pi[(i, i)].update({nt: lp})
+                        self._bp[(i, i)].update({nt: Tree(nt, [w])})
+                    else:
+                        self._pi[(i, i)] = {nt: lp}
+                        self._bp[(i, i)] = {nt: Tree(nt, [w])}
+
 
         # RECURSIVE CASE
         for l in range(1, n):
@@ -95,7 +100,12 @@ class CKYParser:
                             max_tpl = max(ys, key=lambda x: x[-1])
                             nt = max_tpl[0]
                             lp = max_tpl[-1]
-                            self._pi[(i, j)] = {nt: lp}
+                            if (i, j) in self._pi:
+                                aux_lp = list(self._pi[(i, j)].values())
+                                if aux_lp:
+                                    aux_lp = aux_lp[0]
+                                    if lp > aux_lp:
+                                        self._pi[(i, j)] = {nt: lp}
                             # backpointer
                             aux_nt_Y = max_tpl[1]
                             aux_nt_Z = max_tpl[2]
@@ -103,5 +113,8 @@ class CKYParser:
                             l_tree = self._bp[(i, s)][aux_nt_Y]
                             r_tree = self._bp[(s + 1, j)][aux_nt_Z]
                             self._bp[(i, j)] = {nt: Tree(nt, [l_tree, r_tree])}
+
+        if 'S' not in self._pi[(1, n)]:
+            return(None, None)
 
         return (self._pi[(1, n)]['S'], self._bp[1, n]['S'])
