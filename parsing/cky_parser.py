@@ -13,30 +13,16 @@ class CKYParser:
         self.non_lex_N = {str(elem.lhs()) for elem in self.productions
                           if elem.is_nonlexical()}
 
-        non_lx = [e for e in self.productions if e.is_nonlexical()]
-        lx = [e for e in self.productions if e.is_lexical()]
-
-        # dict of X -> a productions with its probabilities
-        self.q_non_lx_dict = {}
-        for elem in non_lx:
-            lhs = str(elem.lhs())
-            rhs = (str(elem.rhs()[0]), str(elem.rhs()[1]))
-            lp = elem.logprob()
-            if lhs in self.q_non_lx_dict:
-                self.q_non_lx_dict[lhs].update({rhs: lp})
+        # dict of productions
+        self.q = {}
+        for prod in self.productions:
+            lhs = str(prod.lhs())
+            rhs = tuple(list(map(str, prod.rhs())))
+            lp = prod.logprob()
+            if lhs in self.q:
+                self.q[lhs].update({rhs: lp})
             else:
-                self.q_non_lx_dict[lhs] = {rhs: lp}
-
-        # dict of X -> Y Z productions with its probabilities
-        self.q_lx_dict = {}
-        for elem in lx:
-            lhs = str(elem.lhs())
-            rhs = elem.rhs()
-            lp = elem.logprob()
-            if lhs in self.q_lx_dict:
-                self.q_lx_dict[lhs].update({rhs: lp})
-            else:
-                self.q_lx_dict[lhs] = {rhs: lp}
+                self.q[lhs] = {rhs: lp}
 
     def parse(self, sent):
         """Parse a sequence of terminals.
@@ -44,8 +30,7 @@ class CKYParser:
         """
 
         productions = self.productions
-        q_lx_dict = self.q_lx_dict
-        q_non_lx_dict = self.q_non_lx_dict
+        q = self.q
         lex_N = self.lex_N
         non_lex_N = self.non_lex_N
 
@@ -64,15 +49,14 @@ class CKYParser:
         for i in range(1, n + 1):
             w = sent[i - 1]
             for nt in lex_N:
-                if (w,) in q_lx_dict[nt]:
-                    lp = q_lx_dict[nt][(w,)]
+                if (w,) in q[nt]:
+                    lp = q[nt][(w,)]
                     if (i, i) in self._pi:
                         self._pi[(i, i)].update({nt: lp})
                         self._bp[(i, i)].update({nt: Tree(nt, [w])})
                     else:
                         self._pi[(i, i)] = {nt: lp}
                         self._bp[(i, i)] = {nt: Tree(nt, [w])}
-
 
         # RECURSIVE CASE
         for l in range(1, n):
@@ -82,30 +66,23 @@ class CKYParser:
                     # all productions to compare
                     prod_xs = [elem for elem in productions
                                if str(elem.lhs()) == X]
+                    ys = []
                     for prd in prod_xs:
                         Y = str(prd.rhs()[0])
                         Z = str(prd.rhs()[1])
-                        aux_lp = q_non_lx_dict[X][(Y, Z)]
-                        ys = []
+                        aux_lp = prd.logprob()
                         for s in range(i, j):
                             if Y in self._pi[(i, s)]:
                                 if Z in self._pi[(s + 1, j)]:
-                                    ys.append(
-                                        (X, Y, Z, s,
-                                         (aux_lp +
-                                          self._pi[(i, s,)][Y] +
-                                          self._pi[(s + 1, j,)][Z]))
-                                    )
+                                    Y_lp = self._pi[(i, s,)][Y]
+                                    Z_lp = self._pi[(s + 1, j,)][Z]
+                                    new_lp = aux_lp + Y_lp + Z_lp
+                                    ys.append((X, Y, Z, s, new_lp))
                         if ys:
                             max_tpl = max(ys, key=lambda x: x[-1])
                             nt = max_tpl[0]
                             lp = max_tpl[-1]
-                            if (i, j) in self._pi:
-                                aux_lp = list(self._pi[(i, j)].values())
-                                if aux_lp:
-                                    aux_lp = aux_lp[0]
-                                    if lp > aux_lp:
-                                        self._pi[(i, j)] = {nt: lp}
+                            self._pi[(i, j)] = {nt: lp}
                             # backpointer
                             aux_nt_Y = max_tpl[1]
                             aux_nt_Z = max_tpl[2]
