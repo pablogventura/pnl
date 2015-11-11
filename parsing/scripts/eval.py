@@ -1,13 +1,13 @@
 """Evaulate a parser.
 
 Usage:
-  eval.py -i <file> -n <n> -m <n>
+  eval.py -i <file> [-n <n>] [-m <n>]
   eval.py -h | --help
 
 Options:
   -i <file>     Parsing model file.
-  -n <n>        Eval the first n sentences.
-  -m <n>        Eval only sentences of length at most m.
+  -n <n>        Eval the first n sentences [default: inf].
+  -m <n>        Eval only sentences of length at most m [default: inf].
   -h --help     Show this screen.
 """
 from docopt import docopt
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     print('Loading corpus...')
     files = '3LB-CAST/.*\.tbf\.xml'
     corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
-    parsed_sents = [ps for ps in corpus.parsed_sents() if len(ps) <= m]
+    parsed_sents = [ps for ps in corpus.parsed_sents() if len(ps.leaves()) <= m]
 
     print('Parsing...')
     hits, total_gold, total_model = 0, 0, 0
@@ -83,14 +83,14 @@ if __name__ == '__main__':
             break
 
     print('')
-    print('Parsed {} sentences'.format(n))
+    print('Parsed {} sentences'.format(other_n))
     print('Labeled')
     print('  Precision: {:2.2f}% '.format(prec))
     print('  Recall: {:2.2f}% '.format(rec))
     print('  F1: {:2.2f}% '.format(f1))
 
     print('')
-    print('Parsed {} sentences'.format(n))
+    print('Parsed {} sentences'.format(other_n))
     print('Unlabeled')
     print('  Precision: {:2.2f}% '.format(unl_prec))
     print('  Recall: {:2.2f}% '.format(unl_rec))
