@@ -1,11 +1,9 @@
-from collections import defaultdict
-from nltk.grammar import Production as P, ProbabilisticProduction as PP,\
-    Nonterminal as N, induce_pcfg
+from nltk.grammar import Nonterminal as N, induce_pcfg
 from .cky_parser import CKYParser
-from nltk.grammar import PCFG
+from nltk import Tree
 from .util import lexicalize, unlexicalize
-from .baselines import Flat
 import copy
+
 
 class UPCFG:
     """Unlexicalized PCFG.
@@ -19,12 +17,12 @@ class UPCFG:
         prods = []
         for tree in parsed_sents:
             t2 = copy.deepcopy(tree)
+            # unlexicalize
+            unlexicalize(t2)
             # binarise productions
             t2.chomsky_normal_form()
             # get rid of unary nonterminal productions
             t2.collapse_unary(collapsePOS=True, collapseRoot=True)
-            # unlexicalize
-            unlexicalize(t2)
             productions = t2.productions()
             prods += productions
 
@@ -43,14 +41,18 @@ class UPCFG:
         tagged_sent -- the tagged sentence (a list of pairs (word, tag)).
         """
         sent = []
-        tag = []
+        tags = []
         for w, t in tagged_sent:
-            tag.append(t)
+            tags.append(t)
             sent.append(w)
-
-        p, t = self.parser.parse(tag)
-
+        # parse by tag
+        p, t = self.parser.parse(tags)
         if t is None:
-            return Flat(None, self.S).parse(tagged_sent)
-
-        return lexicalize(t, sent)
+            # Flat tree
+            return Tree(self.S, [Tree(tag, [word]) for word, tag in tagged_sent])
+        else:
+            # return the words to the leaves
+            t = lexicalize(t, sent)
+            # return the tree to its original structure
+            t.un_chomsky_normal_form()
+        return t
