@@ -111,6 +111,55 @@ class TestCKYParser(TestCase):
                 self.assertAlmostEqual(prob1, prob2)
 
     # ambiguous parsing example
-    def test_ambiguous_example_1(self):
-        pass
-        # TODO
+    def test_parse_ambiguous(self):
+        grammar = PCFG.fromstring(
+            """
+            S -> Pn VP [1.0]
+            VP -> VP PP [0.9]
+            VP -> V NP [0.1]
+            PP -> P NP [1.0]
+            NP -> Det N [0.9]
+            NP -> Det NPP [0.1]
+            NPP -> N PP [1.0]
+
+            Pn -> 'I'  [1.0]
+            V -> 'rode' [1.0]
+            Det -> 'an' [0.2]
+            N -> 'elephant' [0.6]
+            P -> 'in' [1.0]
+            Det -> 'my' [0.8]
+            N -> 'pajamas' [0.4]
+            """)
+        parser = CKYParser(grammar)
+        lp, t = parser.parse('I rode an elephant in my pajamas'.split())
+        t.draw()
+
+
+ # check chart
+        pi = {
+            (1, 1): {'Pn': log2(1.0)},
+            (2, 2): {'V': log2(1.0)},
+            (3, 3): {'Det': log2(0.2)},
+            (4, 4): {'N': log2(0.6)},
+            (5, 5): {'P': log2(1.0)},
+            (6, 6): {'Det': log2(0.8)},
+            (7, 7): {'N': log2(0.4)},
+
+            (1, 2): {'NP': log2(0.6 * 1.0 * 0.9)},
+            (2, 3): {},
+            (3, 4): {},
+            (4, 5): {'NP': log2(0.4 * 0.1 * 1.0)},
+
+            (1, 3): {},
+            (2, 4): {},
+            (3, 5): {'VP': log2(1.0) + log2(1.0) + log2(0.4 * 0.1 * 1.0)},
+
+            (1, 4): {},
+            (2, 5): {},
+
+            (1, 5): {'S':
+                     log2(1.0) +  # rule S -> NP VP
+                     log2(0.6 * 1.0 * 0.9) +  # left part
+                     log2(1.0) + log2(1.0) + log2(0.4 * 0.1 * 1.0)},  # right part
+        }
+        self.assertEqualPi(parser._pi, pi)
