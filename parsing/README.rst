@@ -53,17 +53,18 @@ A continuación, los resultados de evaluar los modelos provistos por la cátedra
 Flat model
 ----------
 
+
 * Labeled
 
- * Precision: 99.93% 
- * Recall: 14.57% 
- * F1: 25.43% 
+  * Precision: 99.93% 
+  * Recall: 14.57% 
+  * F1: 25.43% 
 
 * Unlabeled
 
- * Precision: 100.00% 
- * Recall: 14.58% 
- * F1: 25.45% 
+  * Precision: 100.00% 
+  * Recall: 14.58% 
+  * F1: 25.45% 
 
 * time:
 
