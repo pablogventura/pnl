@@ -3,18 +3,29 @@ from nltk import Tree
 
 class CKYParser:
 
-    def __init__(self, grammar):
+    def __init__(self, grammar,):
         """
         grammar -- a binarised NLTK PCFG.
         """
         self.productions = grammar.productions()
+        self.prods = {}
+        self.q = {}
+        self.start = grammar.start().symbol()
+
         self.lex_N = {str(elem.lhs()) for elem in self.productions
                       if elem.is_lexical()}
-        self.non_lex_N = {str(elem.lhs()) for elem in self.productions
-                          if elem.is_nonlexical()}
+
+        # inverse dict: for a production X -> Y Z [prob],
+        # we save (Y, Z) as a key and (X, prob) as a value
+        for prod in self.productions:
+            lhs = prod.lhs()
+            rhs = prod.rhs()
+            lp = prod.logprob()
+            k = tuple(map(str, rhs))
+            v = [(str(lhs), lp)]
+            self.prods[k] = v
 
         # dict of productions
-        self.q = {}
         for prod in self.productions:
             lhs = str(prod.lhs())
             rhs = tuple(list(map(str, prod.rhs())))
@@ -29,10 +40,9 @@ class CKYParser:
         sent -- the sequence of terminals.
         """
 
-        productions = self.productions
         q = self.q
         lex_N = self.lex_N
-        non_lex_N = self.non_lex_N
+        S = self.start
 
         n = len(sent)
         self._pi = {}
@@ -51,6 +61,8 @@ class CKYParser:
             for nt in lex_N:
                 if (w,) in q[nt]:
                     lp = q[nt][(w,)]
+                    # for ambiguous productions in case a word has to POS tags
+                    # (check if really necessary)
                     if (i, i) in self._pi:
                         self._pi[(i, i)].update({nt: lp})
                         self._bp[(i, i)].update({nt: Tree(nt, [w])})
@@ -62,36 +74,25 @@ class CKYParser:
         for l in range(1, n):
             for i in range(1, n - l + 1):
                 j = i + l
-                for X in non_lex_N:
-                    # all productions to compare
-                    prod_xs = [elem for elem in productions
-                               if str(elem.lhs()) == X]
-                    ys = []
-                    for prd in prod_xs:
-                        Y = str(prd.rhs()[0])
-                        Z = str(prd.rhs()[1])
-                        aux_lp = prd.logprob()
-                        for s in range(i, j):
-                            if Y in self._pi[(i, s)]:
-                                if Z in self._pi[(s + 1, j)]:
-                                    Y_lp = self._pi[(i, s,)][Y]
-                                    Z_lp = self._pi[(s + 1, j,)][Z]
-                                    new_lp = aux_lp + Y_lp + Z_lp
-                                    ys.append((X, Y, Z, s, new_lp))
-                        if ys:
-                            max_tpl = max(ys, key=lambda x: x[-1])
-                            nt = max_tpl[0]
-                            lp = max_tpl[-1]
-                            self._pi[(i, j)] = {nt: lp}
-                            # backpointer
-                            aux_nt_Y = max_tpl[1]
-                            aux_nt_Z = max_tpl[2]
-                            s = max_tpl[3]
-                            l_tree = self._bp[(i, s)][aux_nt_Y]
-                            r_tree = self._bp[(s + 1, j)][aux_nt_Z]
-                            self._bp[(i, j)] = {nt: Tree(nt, [l_tree, r_tree])}
+                for s in range(i, j):
+                    # once s is fixed, ask for the possible partitions
+                    # and its probabilities
+                    for (Y, Y_lp) in self._pi[(i, s)].items():
+                        for (Z, Z_lp) in self._pi[(s + 1, j)].items():
+                            # ask if there exists a non terminal X such
+                            # X -> Y Z is a valid production
+                            if (Y, Z) in self.prods:
+                                for (X, X_lp) in self.prods[(Y, Z)]:
+                                    new_lp = Y_lp + Z_lp + X_lp
+                                    # max prob and arg max
+                                    if new_lp > \
+                                       self._pi[(i, j)].get(X, float('-inf')):
+                                        self._pi[(i, j)][X] = new_lp
+                                        l_tree_bp = self._bp[(i, s)][Y]
+                                        r_tree_bp = self._bp[(s + 1, j)][Z]
+                                        self._bp[(i, j)][X] = Tree(X, [l_tree_bp, r_tree_bp])
 
-        if 'S' not in self._pi[(1, n)]:
+        if S not in self._pi[(1, n)]:
             return(None, None)
 
-        return (self._pi[(1, n)]['S'], self._bp[1, n]['S'])
+        return (self._pi[(1, n)][S], self._bp[1, n][S])
