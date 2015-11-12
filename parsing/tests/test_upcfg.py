@@ -19,8 +19,6 @@ class TestUPCFG(TestCase):
             """)
         t2 = t.copy(deep=True)
 
-        model = UPCFG([t])
-
         self.assertEqual(t, t2)
 
     def test_productions(self):

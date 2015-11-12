@@ -110,7 +110,7 @@ class TestCKYParser(TestCase):
                 prob2 = d2[k2]
                 self.assertAlmostEqual(prob1, prob2)
 
-    # ambiguous parsing example
+    # ambiguous parsing example, taken from nltk webpage
     def test_parse_ambiguous(self):
         grammar = PCFG.fromstring(
             """
@@ -132,10 +132,20 @@ class TestCKYParser(TestCase):
             """)
         parser = CKYParser(grammar)
         lp, t = parser.parse('I rode an elephant in my pajamas'.split())
-        t.draw()
 
+        # check tree
+        t2 = Tree.fromstring(
+            """
+            (S
+                (Pn I)
+                (VP
+                    (VP (V rode) (NP (Det an) (N elephant)))
+                    (PP (P in) (NP (Det my) (N pajamas)))))
+            """)
 
- # check chart
+        self.assertEqual(t, t2)
+
+        # check chart
         pi = {
             (1, 1): {'Pn': log2(1.0)},
             (2, 2): {'V': log2(1.0)},
@@ -144,22 +154,81 @@ class TestCKYParser(TestCase):
             (5, 5): {'P': log2(1.0)},
             (6, 6): {'Det': log2(0.8)},
             (7, 7): {'N': log2(0.4)},
-
-            (1, 2): {'NP': log2(0.6 * 1.0 * 0.9)},
-            (2, 3): {},
-            (3, 4): {},
-            (4, 5): {'NP': log2(0.4 * 0.1 * 1.0)},
-
+            (3, 4): {'NP': log2(0.9*0.2*0.6)},
+            (2, 4): {'VP': log2(0.1*0.2*0.6*0.9)},
+            (6, 7): {'NP': log2(0.9*0.8*0.4)},
+            (5, 7): {'PP': log2(1.0*1.0*0.9*0.8*0.4)},
+            (3, 7): {'NP': log2(0.9*0.6*0.1*0.2*0.4*0.8)},
+            # check
+            (4, 7): {'NPP': -2.5328248773859805},
+            # (2,4) and (5,7)
+            (1, 4): {'S': log2(0.9*0.6*0.1*0.2)},
+            (2, 7): {'VP': log2(0.9 * 0.9 * 0.4*0.8*0.1*0.9*0.2*0.6)},
+            (1, 7): {'S': log2(1.0*0.9 * 0.9 * 0.4*0.8*0.1*0.9*0.2*0.6)},
+            # empty
+            (2, 6): {},
+            (4, 5): {},
+            (5, 6): {},
             (1, 3): {},
-            (2, 4): {},
-            (3, 5): {'VP': log2(1.0) + log2(1.0) + log2(0.4 * 0.1 * 1.0)},
-
-            (1, 4): {},
+            (1, 6): {},
             (2, 5): {},
-
-            (1, 5): {'S':
-                     log2(1.0) +  # rule S -> NP VP
-                     log2(0.6 * 1.0 * 0.9) +  # left part
-                     log2(1.0) + log2(1.0) + log2(0.4 * 0.1 * 1.0)},  # right part
+            (3, 5): {},
+            (1, 2): {},
+            (4, 6): {},
+            (1, 5): {},
+            (3, 6): {},
+            (2, 3): {},
         }
         self.assertEqualPi(parser._pi, pi)
+
+        # check log probability
+        lp2 = log2(1.0 * 0.9 * 0.9 * 0.4 * 0.8 * 0.1 * 0.9 * 0.2 * 0.6)
+        self.assertAlmostEqual(lp, lp2)
+
+        # check partial results
+        bp = {
+            (1, 1): {'Pn': Tree.fromstring("(Pn I)")},
+            (2, 2): {'V': Tree.fromstring("(V rode)")},
+            (3, 3): {'Det': Tree.fromstring("(Det an)")},
+            (4, 4): {'N': Tree.fromstring("(N elephant)")},
+            (5, 5): {'P': Tree.fromstring("(P in)")},
+            (6, 6): {'Det': Tree.fromstring("(Det my)")},
+            (7, 7): {'N': Tree.fromstring("(N pajamas)")},
+
+            (3, 4): {'NP': Tree.fromstring("(NP (Det an) (N elephant))")},
+            (6, 7): {'NP': Tree.fromstring("(NP (Det my) (N pajamas))")},
+
+            (2, 4): {'VP': Tree.fromstring("(VP (V rode) (NP (Det an) (N elephant)))")},
+            (5, 7): {'PP': Tree.fromstring("(PP (P in) (NP (Det my) (N pajamas)))")},
+            (1, 4): {'S': Tree.fromstring("(S (Pn I) (VP (V rode) (NP (Det an) (N elephant))))")},
+            (3, 7): {'NP': Tree.fromstring("(NP (Det an) (NPP (N elephant) (PP (P in) (NP (Det my) (N pajamas) ))))")},
+            (4, 7): {'NPP': Tree.fromstring("(NPP (N elephant) (PP (P in) (NP (Det my) (N pajamas) )))")},
+
+            (2, 7): {'VP': Tree.fromstring(
+                """(VP (VP (V rode) (NP (Det an) (N elephant)))
+                (PP (P in) (NP (Det my) (N pajamas))))
+                """)},
+
+            (1, 7): {'S': Tree.fromstring(
+                """(S
+                (Pn I)
+                (VP (VP (V rode) (NP (Det an) (N elephant)))
+                (PP (P in) (NP (Det my) (N pajamas)))))
+                """)},
+
+            # empty ones
+            (2, 6): {},
+            (4, 5): {},
+            (5, 6): {},
+            (1, 3): {},
+            (1, 6): {},
+            (2, 5): {},
+            (3, 5): {},
+            (1, 2): {},
+            (4, 6): {},
+            (1, 5): {},
+            (3, 6): {},
+            (2, 3): {},
+            }
+
+        self.assertEqual(parser._bp, bp)
