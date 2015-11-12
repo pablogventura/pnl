@@ -1,7 +1,7 @@
 """Train a parser.
 
 Usage:
-  train.py [-m <model>] [-h <int>] -o <file>
+  train.py [-m <model>] [-H <int>] -o <file>
   train.py -h | --help
 
 Options:
@@ -9,7 +9,7 @@ Options:
                   flat: Flat trees
                   rbranch: Right branching trees
                   lbranch: Left branching trees
-  -h <int>      Horizontal Markovization order [default: 0].
+  -H <int>      Horizontal Markovization order [default: -1].
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
@@ -37,10 +37,20 @@ if __name__ == '__main__':
     corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
 
     print('Training model...')
-    if opts['-m'] == 'upcfg':
-        model = models[opts['-m']](corpus.parsed_sents(),horzMarkov=int(opts['-h']))
+    mopt = opts['-m']
+    if mopt in models:
+        if mopt == 'upcfg':
+            H = int(opts['-H'])
+            if H == -1:
+                H = None
+                model = models[opts['-m']](corpus.parsed_sents(),horzMarkov=H)
+        else:
+            model = models[opts['-m']](corpus.parsed_sents())
+
     else:
-        model = models[opts['-m']](corpus.parsed_sents())
+        print('\nThat model you are looking for, is not implemented... Yet...',
+              '\n\nThe available models are: {}\n'.format(list(models.keys())))
+        sys.exit()
     print('Saving...')
     filename = opts['-o']
     f = open(filename, 'wb')

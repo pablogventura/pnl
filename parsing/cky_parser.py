@@ -1,5 +1,5 @@
 from nltk import Tree
-
+from collections import defaultdict
 
 class CKYParser:
 
@@ -8,7 +8,7 @@ class CKYParser:
         grammar -- a binarised NLTK PCFG.
         """
         self.productions = grammar.productions()
-        self.prods = {}
+        self.prods = defaultdict(list)
         self.q = {}
         self.start = grammar.start().symbol()
 
@@ -17,14 +17,9 @@ class CKYParser:
 
         # inverse dict: for a production X -> Y Z [prob],
         # we save (Y, Z) as a key and (X, prob) as a value
-        for prod in self.productions:
-            lhs = prod.lhs()
-            rhs = prod.rhs()
-            lp = prod.logprob()
-            k = tuple(map(str, rhs))
-            v = [(str(lhs), lp)]
-            self.prods[k] = v
-
+        for p in self.productions:
+            t = (str(p.lhs()), p.logprob())
+            self.prods[tuple(str(t) for t in p.rhs())].append(t)
         # dict of productions
         for prod in self.productions:
             lhs = str(prod.lhs())
