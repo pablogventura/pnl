@@ -318,21 +318,21 @@ Accuracy in known words: 97.61%
 n = 3
 -----
 
-Accuracy: 92.76%
+Accuracy: 93.17%
 
-Accuracy in unknown words: 49.63%
+Accuracy in unknown words: 52.31%
 
-Accuracy in known words: 97.52%
+Accuracy in known words: 97.67%
 
 
 n = 4
 -----
 
-Accuracy: 92.78%
+Accuracy: 93.14%
 
-Accuracy in unknown words: 51.78%
+Accuracy in unknown words: 54.14%
 
-Accuracy in known words: 97.30%
+Accuracy in known words: 97.44%
 
 
 Ejercicio 6: Features para Etiquetado de Secuencias

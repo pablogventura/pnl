@@ -191,7 +191,7 @@ class MLHMM(HMM):
 
             ys = []
             if n > 1:
-                ys = ['<s>'*(n-1)]
+                ys = ['<s>']*(n-1)
             for pair in tagged_sent:
                 e_counts[pair] += 1
                 word = pair[0]
