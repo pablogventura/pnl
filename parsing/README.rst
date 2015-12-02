@@ -28,15 +28,9 @@ También se creó un test para ver que frente a una sentencia amigua, se selecci
 La sentencia por la que se optó para el test es "I rode an elephant in my pajamas", y sus posibles árboles de parseo son:
 
 .. image:: https://github.com/giovannirescia/PLN-2015/blob/practico3/parsing/parse1.png?raw=true
-   :height: 285 px
-   :width: 459 px
-   :scale: 10
 
 
 .. image:: https://github.com/giovannirescia/PLN-2015/blob/practico3/parsing/parse2.png?raw=true
-   :height: 291 px
-   :width: 404 px
-   :scale: 10
 
 
 Como es esperado, con el algoritmo se conseguirá el primer árbol, ya que es el más probable.
