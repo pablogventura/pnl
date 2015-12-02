@@ -24,6 +24,23 @@ EJERCICIO 2: Algoritmo CKY
 Se implementó el algoritmo CKY para generar un árbol sintáctico de una sentencia. Dicho árbol es construido basándonos en una gramática
 libre de contexto probabilística (que debe estar en forma normal de Chomsky), obtenida de las sentencias de entramiento del corpus usado.
 
+También se creó un test para ver que frente a una sentencia amigua, se seleccionará el árbol de parseo más probable.
+La sentencia por la que se optó para el test es "I rode an elephant in my pajamas", y sus posibles árboles de parseo son:
+
+.. image:: https://github.com/giovannirescia/PLN-2015/blob/practico3/parsing/parse1.png?raw=true
+   :height: 571 px
+   :width: 918 px
+   :scale: 45
+
+
+.. image:: https://github.com/giovannirescia/PLN-2015/blob/practico3/parsing/parse2.png?raw=true
+   :height: 582 px
+   :width: 808 px
+   :scale: 50
+
+
+Como es esperado, con el algoritmo se conseguirá el primer árbol, ya que es el más probable.
+
 
 EJERCICIO 3: UPCFG
 ==================
