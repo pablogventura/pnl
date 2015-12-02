@@ -30,13 +30,13 @@ La sentencia por la que se optó para el test es "I rode an elephant in my pajam
 .. image:: https://github.com/giovannirescia/PLN-2015/blob/practico3/parsing/parse1.png?raw=true
    :height: 571 px
    :width: 918 px
-   :scale: 45
+   :scale: 10
 
 
 .. image:: https://github.com/giovannirescia/PLN-2015/blob/practico3/parsing/parse2.png?raw=true
    :height: 582 px
    :width: 808 px
-   :scale: 50
+   :scale: 10
 
 
 Como es esperado, con el algoritmo se conseguirá el primer árbol, ya que es el más probable.
