@@ -1,0 +1,7 @@
+./corpora
+*ancora
+baseline
+corpus/*
+languagemodeling/corpora/
+*/models
+pln_2015.egg*

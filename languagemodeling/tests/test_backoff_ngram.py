@@ -148,6 +148,7 @@ class TestBackoffNGram(TestCase):
 
         alpha = 1.0 - (1.0 - 0.5) / 1.0
         denom = model.denom(('el',))
+        print(denom)
         self.assertAlmostEqual(model.alpha(('el',)), alpha)
 
         probs = {
@@ -166,6 +167,7 @@ class TestBackoffNGram(TestCase):
             self.assertAlmostEqual(model.cond_prob(token, [prev]), p, msg=(token, prev))
 
         # the sum is one:
+        print(probs)
         prob_sum = sum(probs.values())
         self.assertAlmostEqual(prob_sum, 1.0)
 
@@ -220,7 +222,7 @@ class TestBackoffNGram(TestCase):
             BackOffNGram(3, self.sents, beta=0.5, addone=True),
         ]
 
-        tokens = {'el', 'gato', 'come', 'pescado', '.', 'la', 'gata', 'salmón', '</s>'}
+        tokens = {'el', 'gato', 'come', 'pescado', '.', 'la', 'gata', 'salmón', }
         prev_tokens = {'el', 'gato', 'come', 'pescado', '.', 'la', 'gata', 'salmón', '<s>'}
         prevs = [['<s>', '<s>']] + \
             [['<s>', t] for t in prev_tokens] + \
@@ -246,7 +248,7 @@ class TestBackoffNGram(TestCase):
             ('</s>',): 1,
         }
         for gram, c in counts.items():
-            self.assertEqual(model.count(gram), c, gram)
+            self.assertEqual(model.tocounts[gram], c, gram)
 
     def assertAlmostLessEqual(self, a, b, places=7, msg=None):
         self.assertTrue(a < b or round(abs(a - b), places) == 0, msg=msg)
