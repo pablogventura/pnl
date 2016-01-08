@@ -77,7 +77,6 @@ class TestInterpolatedNGram(TestCase):
 
         c1 = 2.0  # count for 'come' (and '.')
         l1 = c1 / (c1 + gamma)
-
         probs = {
             ('pescado', 'come'): l1 * 0.5 + (1.0 - l1) * 1 / 12.0,
             ('salmón', 'come'): l1 * 0.5 + (1.0 - l1) * 1 / 12.0,
@@ -171,7 +170,7 @@ class TestInterpolatedNGram(TestCase):
             ('</s>',): 1,
         }
         for gram, c in counts.items():
-            self.assertEqual(model.count(gram), c, gram)
+            self.assertEqual(model.tocounts[gram], c, gram)
 
     def assertAlmostLessEqual(self, a, b, places=7, msg=None):
         self.assertTrue(a < b or round(abs(a - b), places) == 0, msg=msg)

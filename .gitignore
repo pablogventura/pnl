@@ -1,0 +1,9 @@
+./corpora
+*ancora
+baseline
+corpus/*
+*austen*
+*lavoz*
+
+*/models
+pln_2015.egg*
