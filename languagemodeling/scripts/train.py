@@ -1,6 +1,7 @@
 """Train an n-gram model.
 
 Usage:
+<<<<<<< HEAD
   train.py -n <n> -o <file> [-m <model>] [-d <float>] [-g <float>] [--addone <int>]
   train.py -h | --help
 
@@ -9,6 +10,11 @@ Options:
   -m <model>    Model to use [default: ngram]:
                   ngram: Unsmoothed n-grams.
   -d <float>    Discount value (0 <= d <= 1) [default: 0.1].
+                  addone: N-grams with add-one smoothing.
+                  interpolated: an interpolated model.
+                  backoff: a backoff with discounting model
+
+  -b <n>           The beta parameter for the backoff model [default: 0].
   -o <file>     Output model file.
   -g <float>    Gamma Parameter for Jelinek Mercer [default: 0].
   --addone <int> Whether to use addone in Jelinek Mercer or not [default: 0].
@@ -16,19 +22,22 @@ Options:
 """
 from docopt import docopt
 import pickle
+
 from nltk.corpus import PlaintextCorpusReader, brown
 from languagemodeling.ngram import NGram, KneserNeyNGram
 from languagemodeling.oldngram import BackOffNGram, AddOneNGram 
 from languagemodeling.kneserney import *
 from languagemodeling.smoothing import AdditiveSmoothingNGram , GoodTuringNGram , JelinekMercerNGram 
 import sys
+from languagemodeling.ngram import NGram, AddOneNGram, InterpolatedNGram, BackOffNGram
+
 
 
 if __name__ == '__main__':
     opts = docopt(__doc__)
-
     # load the data
     sents = PlaintextCorpusReader('../languagemodeling/corpora/','training_corpus.txt').sents()
+
 #    k = len(brown.sents())
  #   brown_training_data = brown.sents()[:int(k*9/10)]
     n = int(opts['-n'])
@@ -65,6 +74,7 @@ if __name__ == '__main__':
         for k,v in models.items():
             print('%r => %s' % (k, str(v)))
         sys.exit()
+
     # save it
     filename = opts['-o']
     f = open(filename, 'wb')

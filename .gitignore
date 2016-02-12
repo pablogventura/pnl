@@ -2,8 +2,14 @@
 *ancora
 baseline
 corpus/*
+*chen_mo*
 *austen*
 *lavoz*
-
+languagemodeling/oldngram.py
+smoothing*
+*/models
+pln_2015.egg*
+*kneser_ney_models
+languagemodeling/corpora/
 */models
 pln_2015.egg*
