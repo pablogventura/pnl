@@ -11,8 +11,8 @@ Options:
 
 from docopt import docopt
 import pickle
-from languagemodeling.ngram import NGram, AddOneNGram, InterpolatedNGram, BackOffNGram
-from nltk.corpus import PlaintextCorpusReader
+from languagemodeling.ngram import NGram, KneserNeyNGram
+from nltk.corpus import PlaintextCorpusReader, brown
 
 
 if __name__ == '__main__':
@@ -24,5 +24,17 @@ if __name__ == '__main__':
     model = pickle.load(open(filename,'rb'))
 
     test_data = PlaintextCorpusReader('../languagemodeling/corpora/','test_corpus.txt').sents()
-
+#    k = len(brown.sents())
+ #   brown_test_data = brown.sents()[int(k*9/10):]
+    try:
+        print('Smoothing Technique: {}'.format(model.smoothingtechnique))
+    except:
+        pass
+    print('Model order: {}'.format(model.n))
+    try:
+        d = model.delta
+    except:
+        d = None
+        pass
+    print('Model delta: {}'.format(d))
     print("perplexity: ",model.perplexity(test_data))
