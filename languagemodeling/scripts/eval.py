@@ -12,7 +12,7 @@ Options:
 from docopt import docopt
 import pickle
 
-from languagemodeling.ngram import NGram, KneserNeyNGram
+from languagemodeling.kneserney import *
 from nltk.corpus import PlaintextCorpusReader, brown
 
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         pass
     print('Model order: {}'.format(model.n))
     try:
-        d = model.delta
+        d = model.D
     except:
         d = None
         pass

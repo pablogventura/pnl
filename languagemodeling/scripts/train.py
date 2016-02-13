@@ -1,7 +1,6 @@
 """Train an n-gram model.
 
 Usage:
-<<<<<<< HEAD
   train.py -n <n> -o <file> [-m <model>] [-d <float>] [-g <float>] [--addone <int>]
   train.py -h | --help
 
@@ -24,7 +23,6 @@ from docopt import docopt
 import pickle
 
 from nltk.corpus import PlaintextCorpusReader, brown
-from languagemodeling.ngram import NGram, KneserNeyNGram
 from languagemodeling.oldngram import BackOffNGram, AddOneNGram 
 from languagemodeling.kneserney import *
 from languagemodeling.smoothing import AdditiveSmoothingNGram , GoodTuringNGram , JelinekMercerNGram 
@@ -49,7 +47,7 @@ if __name__ == '__main__':
   #            'kn1': KN1,
  #             'kn2': KN2,
 #              'kn3': KN3,
-              'kn4': KN4,
+              'kn': KN4,
           }
     addone = bool(opts['--addone'])
     gamma = int(opts['-g'])

@@ -101,7 +101,7 @@ class NGram(object):
         for sent in sents:
             M += len(sent)
         # cross-entropy
-
+        print('Computing perplexity on {} sents'.format(len(sents)))
         l = 0
         for j, sent in enumerate(sents):
 
@@ -117,10 +117,12 @@ class KN(NGram):
         sents = list(map(lambda x: ['<s>']*(n-1) + x + ['</s>'], sents))
 
         # N1+(·w_<i+1>)
-        N_dot_w = defaultdict(set)
+        self._N_dot_tokens_dict = N_dot_tokens = defaultdict(set)
 
         # N1+(w^<n-1> ·)
-        N_w_dot = defaultdict(set)
+        self._N_tokens_dot_dict = N_tokens_dot = defaultdict(set)
+
+        self._N_dot_tokens_dot_dict = N_dot_tokens_dot = defaultdict(set)
 
         self.counts = counts = defaultdict(int)
         vocabulary = []
@@ -135,38 +137,36 @@ class KN(NGram):
                         if len(ngram) == 1:
                             vocabulary.append(ngram[0])
                         else:
-                            # e.g., (a b c)
-                            # left_dot = (a,)
-                            # cont = (b c)
-                            left_dot = ngram[:1]
-                            cont = ngram[1:]
-                            # (f g h)
-                            # right_dot = (h,)
-                            # prev = (f g)
-                            right_dot = ngram[-1:]
-                            prev = ngram[:-1]
-                            N_dot_w[cont].add(left_dot)
-                            N_w_dot[prev].add(right_dot)
+                            # e.g., ngram = (1,2,3,4,5,6,7,8)
+                            # right_token = (8,)
+                            # left_token = (1,)
+                            # right_kgram = (2,3,4,5,6,7,8)
+                            # left_kgram = (1,2,3,4,5,6,7)
+                            # middle_kgram = (2,3,4,5,6,7)
+                            right_token, left_token, right_kgram, left_kgram, middle_kgram =\
+                                ngram[-1:], ngram[:1], ngram[1:], ngram[:-1], ngram[1:-1]
+                            N_dot_tokens[right_kgram].add(left_token)
+                            N_tokens_dot[left_kgram].add(right_token)
+                            if middle_kgram:
+                                N_dot_tokens_dot[middle_kgram].add(right_token)
+                                N_dot_tokens_dot[middle_kgram].add(left_token)
         if n-1:
             counts[('<s>',)*(n-1)] = len(sents)
-        self.N_dot_token_dict = N_dot_w
-        self.N_prev_tokens_dot_dict = N_w_dot
         self.vocab = set(vocabulary)
 
-        aux1=0
+        aux=0
         for w in self.vocab:
-            aux1 += len(self.N_dot_token_dict[(w,)])
-        self.N_dot_dot_attr = aux1
-        self.aux1 = aux1 + len(self.vocab)
+            aux += len(self._N_dot_tokens_dict[(w,)])
+        self._N_dot_dot_attr = aux
 
-        r_set = set(counts.values())
-        N_r = defaultdict(int)
+        # for old implementations
+        # self.aux1 = aux1 + len(self.vocab)
 
-        for r in r_set:
-            xs = [ngram for ngram in counts.keys() if counts[ngram] == r]
-            N_r[r] = len(xs)
-
-        self.D = N_r[1] / (N_r[1] + 2* N_r[2])
+        xs = [k for k, v in counts.items() if v == 1 and n == len(k)]
+        ys = [k for k, v in counts.items() if v == 2 and n == len(k)]
+        n1 = len(xs)
+        n2 = len(ys)
+        self.D = n1 / (n1 + 2 * n2)
 
     def V(self):
         """
@@ -178,35 +178,40 @@ class KN(NGram):
         """
         Returns the sum of N_dot_token(w) for all w in the vocabulary
         """
-        return self.N_dot_dot_attr
+        return self._N_dot_dot_attr
 
-    def N_prev_tokens_dot(self, prev_tokens):
+    def N_tokens_dot(self, tokens):
         """
         Returns the count of unique words in which count(prev_tokens+word) > 0
         i.e., how many different ngrams it completes
 
         prev_token -- a tuple of strings
         """
-        return len(self.N_prev_tokens_dot_dict[prev_tokens])
+        if type(tokens) is not tuple:
+            raise TypeError('`tokens` has to be a tuple of strings')
+        return len(self._N_tokens_dot_dict[tokens])
 
-    def N_dot_token(self, token):
+    def N_dot_tokens(self, tokens):
         """
-        Returns the count of unique ngrams ir completes
+        Returns the count of unique ngrams it completes
 
-        token -- a string
+        tokens -- a tuple of strings
         """
-        return len(self.N_dot_token_dict[(token,)])
+        if type(tokens) is not tuple:
+            raise TypeError('`tokens` has to be a tuple of strings')
+        return len(self._N_dot_tokens_dict[tokens])
 
-    def N_dot_cont_tokens(self, cont_tokens):
+    def N_dot_tokens_dot(self, tokens):
         """
-        Returns the count of unique words preceding the tokens
+        Returns the count of unique ngrams it completes
 
-        cont_tokens -- a tuple of strings
+        tokens -- a tuple of strings
         """
-        pass
+        if type(tokens) is not tuple:
+            raise TypeError('`tokens` has to be a tuple of strings')
+        return len(self._N_dot_tokens_dot_dict[tokens])
 
-
-# Attemp4, from
+# Attemp 4, from
 # https://west.uni-koblenz.de/sites/default/files/BachelorArbeit_MartinKoerner.pdf
 
 class KN4(KN):
@@ -226,24 +231,39 @@ class KN4(KN):
         # heuristic
         # return (count(word) + 1) / (count() + |V|)
         if not prev_tokens and n == 1:
-            return (self.count((token,)) +1 ) / (self.count(()) + self.V())
+            return (self.count((token,)) +1 ) / (self.count(()) + self.V()*1)
 
         # case 2.1)
+        # lowest ngram
         if not prev_tokens and n > 1:
-            aux1 = self.N_dot_token(token)
+            aux1 = self.N_dot_tokens((token,))
             aux2 = self.N_dot_dot()
             return aux1 / aux2
-        c = self.count(prev_tokens)
-        if c:
-            t1 = max(self.count(prev_tokens+(token,)) - self.D, 0) / c
-            t2 = self.D * self.N_prev_tokens_dot(prev_tokens) / self.count(prev_tokens)
-            t3 = self.cond_prob(token, prev_tokens[1:])
-            return t1 + t2 * t3
+
+        # highest ngram
+        if len(prev_tokens) == n-1:
+            c = self.count(prev_tokens)
+            if c:
+                t1 = max(self.count(prev_tokens+(token,)) - self.D, 0) / c
+                t2 = self.D * self.N_tokens_dot(prev_tokens) / self.count(prev_tokens)
+                t3 = self.cond_prob(token, prev_tokens[1:])
+                return t1 + t2 * t3
+            else:
+                return 0
+
         else:
-            return 0
-
-
-
+  #          aux = 0
+ #           for word in self.vocab:
+#                aux += self.N_dot_tokens(prev_tokens+(word,))
+            aux = self.N_dot_tokens_dot(prev_tokens)
+#            import ipdb;ipdb.set_trace()
+            if aux:
+                t1 = max(self.N_dot_tokens(prev_tokens+(token,)) - self.D, 0) / aux
+                t2 = self.D * self.N_tokens_dot(prev_tokens) / aux
+                t3 = self.cond_prob(token, prev_tokens[1:])
+                return t1 + t2 * t3
+            else:
+                return 0
 
 
 
