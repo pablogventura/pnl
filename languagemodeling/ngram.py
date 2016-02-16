@@ -6,7 +6,7 @@ from random import random
 
 class NGram(object):
 
-    def __init__(self, n, sents, corpus):
+    def __init__(self, n, sents, corpus=''):
         """
         n -- order of the model.
         sents -- list of sentences, each one being a list of tokens.
@@ -110,8 +110,8 @@ class NGram(object):
 
 class AddOneNGram(NGram):
 
-    def __init__(self, n, sents, corpus):
-        NGram.__init__(self, n, sents, corpus)
+    def __init__(self, n, sents, corpus=''):
+        NGram.__init__(self, n, sents, corpus='')
         # way more efficient than using set union
         voc = ['</s>']
         for s in sents:
@@ -143,7 +143,7 @@ class AddOneNGram(NGram):
 
 class InterpolatedNGram(AddOneNGram):
 
-    def __init__(self, n, sents, corpus, gamma=None, addone=True):
+    def __init__(self, n, sents, corpus='', gamma=None, addone=True):
         """
         n -- order of the model.
         sents -- list of sentences, each one being a list of tokens.
@@ -201,13 +201,13 @@ class InterpolatedNGram(AddOneNGram):
                 xs.append((aux_gamma, aux_perx))
             xs.sort(key=lambda x: x[1])
             self.gamma = xs[0][0]
-            with open('old-stuff/interpolated_' + str(n) + '_parameters_'+corpus, 'a') as f:
-                f.write('Order: {}\n'.format(self.n))
-                f.write('Gamma: {}\n'.format(self.gamma))
-                f.write('AddOne: {}\n'.format(self.addone))
-                f.write('Perplexity observed: {}\n'.format(xs[0][1]))
-                f.write('-------------------------------\n')
-            f.close()
+#            with open('old-stuff/interpolated_' + str(n) + '_parameters_'+corpus, 'a') as f:
+ #               f.write('Order: {}\n'.format(self.n))
+  #              f.write('Gamma: {}\n'.format(self.gamma))
+   #             f.write('AddOne: {}\n'.format(self.addone))
+    #            f.write('Perplexity observed: {}\n'.format(xs[0][1]))
+     #           f.write('-------------------------------\n')
+      #      f.close()
 
         else:
             sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
@@ -277,7 +277,7 @@ class InterpolatedNGram(AddOneNGram):
 
 class BackOffNGram(NGram):
 
-    def __init__(self, n, sents, corpus, beta=None, addone=True):
+    def __init__(self, n, sents, corpus='', beta=None, addone=True):
         """
         Back-off NGram model with discounting as described by Michael Collins.
         n -- order of the model.
@@ -443,7 +443,7 @@ class BackOffNGram(NGram):
 
 
 class KneserNeyBaseNGram(NGram):
-    def __init__(self, sents, n, D=None):
+    def __init__(self, sents, n, corpus='', D=None):
         """
         sents -- list of sents
         n -- order of the model
@@ -452,6 +452,8 @@ class KneserNeyBaseNGram(NGram):
 
         self.n = n
         self.D = D
+        self.corpus = corpus
+        self.smoothingtechnique = 'Kneser Ney Smoothing'
         # N1+(·w_<i+1>)
         self._N_dot_tokens_dict = N_dot_tokens = defaultdict(set)
         # N1+(w^<n-1> ·)
@@ -596,10 +598,8 @@ class KneserNeyBaseNGram(NGram):
 # From https://west.uni-koblenz.de/sites/default/files/BachelorArbeit_MartinKoerner.pdf
 
 class KneserNeyNGram(KneserNeyBaseNGram):
-    def __init__(self, sents, n, corpus, D=None):
-        super(KneserNeyNGram, self).__init__(sents=sents, n=n, D=D)
-        self.corpus = corpus
-        self.smoothingtechnique = 'Kneser Ney Smoothing'
+    def __init__(self, sents, n, corpus='', D=None):
+        super(KneserNeyNGram, self).__init__(sents=sents, corpus=corpus, n=n, D=D)
 
     def cond_prob(self, token, prev_tokens=tuple()):
         n = self.n
