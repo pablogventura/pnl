@@ -201,13 +201,13 @@ class InterpolatedNGram(AddOneNGram):
                 xs.append((aux_gamma, aux_perx))
             xs.sort(key=lambda x: x[1])
             self.gamma = xs[0][0]
-#            with open('old-stuff/interpolated_' + str(n) + '_parameters_'+corpus, 'a') as f:
- #               f.write('Order: {}\n'.format(self.n))
-  #              f.write('Gamma: {}\n'.format(self.gamma))
-   #             f.write('AddOne: {}\n'.format(self.addone))
-    #            f.write('Perplexity observed: {}\n'.format(xs[0][1]))
-     #           f.write('-------------------------------\n')
-      #      f.close()
+            with open('old-stuff/interpolated_' + str(n) + '_parameters_'+corpus, 'a') as f:
+                f.write('Order: {}\n'.format(self.n))
+                f.write('Gamma: {}\n'.format(self.gamma))
+                f.write('AddOne: {}\n'.format(self.addone))
+                f.write('Perplexity observed: {}\n'.format(xs[0][1]))
+                f.write('-------------------------------\n')
+            f.close()
 
         else:
             sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
@@ -501,7 +501,7 @@ class KneserNeyBaseNGram(NGram):
                 xs.append((D, aux_perplexity))
             xs.sort(key=lambda x: x[1])
             self.D = xs[0][0]
-            with open('kneserney_' + str(n) + '_parameters_'+corpus, 'a') as f:
+            with open('old-stuff/kneserney_' + str(n) + '_parameters_'+corpus, 'a') as f:
                 f.write('Order: {}\n'.format(self.n))
                 f.write('D: {}\n'.format(self.D))
                 f.write('Perplexity observed: {}\n'.format(xs[0][1]))
