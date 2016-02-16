@@ -5,10 +5,12 @@ do
     for b in $(ls ./trained_models/$a)
     do 
 	for c in $(ls ./trained_models/$a/$b)
-	do python scripts/eval.py -i trained_models/$a/$b/$c >> REPORTES/"REPORT_"$c".txt"
+	do python scripts/eval.py -i trained_models/$a/$b/$c >> reports/"REPORT_"$c".txt"
 	done
     done
 done
+
+cd reports
 
 cat REPORT_add*_b* > addone_brown.txt
 cat REPORT_add*_s* > addone_shakespeare.txt
@@ -29,3 +31,5 @@ cat REPORT_int*_g* > interpolated_gutenberg.txt
 cat REPORT_ba*_b* > backoff_brown.txt
 cat REPORT_ba*_s* > backoff_shakespeare.txt
 cat REPORT_ba*_g* > backoff_gutenberg.txt
+
+rm R*
