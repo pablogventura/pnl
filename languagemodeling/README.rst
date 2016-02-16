@@ -11,7 +11,7 @@ El objetivo de este práctico es implementar otra técnica de smoothing con la q
 
 La idea básica detrás del algoritmo de *Kneser Ney* es introducir de alguna manera la idea de contexto. Por ejemplo, como explica Dan Jurafsky en sus videolecturas_, en un corpus podemos observar una gran cantidad de unigramas 'San', pero si nos movemos a bigramas, vemos que en la gran mayoría de los casos el unigrama 'San', solo está acompañado del unigrama 'Francisco'.
 
-Esta técnica en vez de centrarse solo en la cuenta de ngramas, también se focaliza en la cantidad de contextos en los que ése ngrama aparece.
+Esta técnica en vez de centrarse solo en la cuenta de ngramas, también se focaliza en la cantidad de contextos en los que éstos aparecen.
 
 Entrenar y Evaluar Modelos
 --------------------------
