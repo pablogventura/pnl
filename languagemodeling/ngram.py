@@ -6,15 +6,16 @@ from random import random
 
 class NGram(object):
 
-    def __init__(self, n, sents):
+    def __init__(self, n, sents, corpus):
         """
         n -- order of the model.
         sents -- list of sentences, each one being a list of tokens.
+        corpus -- which corpus is being used
         """
         assert n > 0
         self.n = n
         self.counts = counts = defaultdict(int)
-
+        self.corpus = corpus
         sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
         sents = list(map((lambda x: x + ['</s>']), sents))
 
@@ -98,22 +99,26 @@ class NGram(object):
             M += len(sent)
         # cross-entropy
         l = 0
+        print('Computing Perplexity on {} sents...\n'.format(len(sents)))
         for sent in sents:
             l += self.sent_log_prob(sent) / M
-
         return pow(2, -l)
+
+    def get_special_param(self):
+        return None, None
 
 
 class AddOneNGram(NGram):
 
-    def __init__(self, n, sents):
-        NGram.__init__(self, n, sents)
+    def __init__(self, n, sents, corpus):
+        NGram.__init__(self, n, sents, corpus)
         # way more efficient than using set union
         voc = ['</s>']
         for s in sents:
             voc += s
         self.voc = list(set(voc))
-
+        self.corpus = corpus
+        self.smoothingtechnique = 'Add One (Laplace) Smoothing'
         sents = list(map((lambda x: x + ['</s>']), sents))
 
     def cond_prob(self, token, prev_tokens=None):
@@ -138,20 +143,22 @@ class AddOneNGram(NGram):
 
 class InterpolatedNGram(AddOneNGram):
 
-    def __init__(self, n, sents, gamma=None, addone=True):
+    def __init__(self, n, sents, corpus, gamma=None, addone=True):
         """
         n -- order of the model.
         sents -- list of sentences, each one being a list of tokens.
         gamma -- interpolation hyper-parameter (if not given, estimate using
             held-out data).
         addone -- whether to use addone smoothing (default: True).
+        corpus -- which corpus is being used
         """
         self.n = n
+        self.smoothingtechnique = 'Interpolated (Jelinek Mercer) Smoothing'
         self.gamma = gamma
         self.addone = addone
         self.counts = counts = defaultdict(int)
         self.gamma_flag = True
-
+        self.corpus = corpus
         # way more efficient than use set unions
         voc = ['</s>']
         for s in sents:
@@ -194,6 +201,14 @@ class InterpolatedNGram(AddOneNGram):
                 xs.append((aux_gamma, aux_perx))
             xs.sort(key=lambda x: x[1])
             self.gamma = xs[0][0]
+            with open('old-stuff/interpolated_' + str(n) + '_parameters_'+corpus, 'a') as f:
+                f.write('Order: {}\n'.format(self.n))
+                f.write('Gamma: {}\n'.format(self.gamma))
+                f.write('AddOne: {}\n'.format(self.addone))
+                f.write('Perplexity observed: {}\n'.format(xs[0][1]))
+                f.write('-------------------------------\n')
+            f.close()
+
         else:
             sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
             sents = list(map((lambda x: x + ['</s>']), sents))
@@ -256,10 +271,13 @@ class InterpolatedNGram(AddOneNGram):
             prob += ML_probs[j+1] * lambdas[j]
         return prob
 
+    def get_special_param(self):
+        return "Gamma", self.gamma
+
 
 class BackOffNGram(NGram):
 
-    def __init__(self, n, sents, beta=None, addone=True):
+    def __init__(self, n, sents, corpus, beta=None, addone=True):
         """
         Back-off NGram model with discounting as described by Michael Collins.
         n -- order of the model.
@@ -267,11 +285,14 @@ class BackOffNGram(NGram):
         beta -- discounting hyper-parameter (if not given, estimate using
             held-out data).
         addone -- whether to use addone smoothing (default: True).
+        corpus -- which corpus is being used
         """
         self.n = n
         self.beta = beta
+        self.corpus = corpus
         self.beta_flag = True
         self.addone = addone
+        self.smoothingtechnique = 'Back Off (Katz) with Discounting Smoothing'
         self.counts = counts = defaultdict(int)
         self.A_set = defaultdict(set)
         voc = ['</s>']
@@ -316,7 +337,13 @@ class BackOffNGram(NGram):
                 xs.append((aux_beta, aux_perx))
             xs.sort(key=lambda x: x[1])
             self.beta = xs[0][0]
-
+            with open('old-stuff/backoff_'+str(n)+'_parameters_'+corpus, 'a') as f:
+                f.write('Order: {}\n'.format(self.n))
+                f.write('Beta: {}\n'.format(self.beta))
+                f.write('AddOne: {}\n'.format(self.addone))
+                f.write('Perplexity observed: {}\n'.format(xs[0][1]))
+                f.write('-------------------------------\n')
+            f.close()
         else:
             sents = list(map((lambda x: x + ['</s>']), sents))
             sents = list(map((lambda x: ['<s>']*(n-1) + x), sents))
@@ -410,6 +437,207 @@ class BackOffNGram(NGram):
         """Size of the vocabulary.
         """
         return len(self.voc)
+
+    def get_special_param(self):
+        return "Beta", self.beta
+
+
+class KneserNeyBaseNGram(NGram):
+    def __init__(self, sents, n, D=None):
+        """
+        sents -- list of sents
+        n -- order of the model
+        D -- Discount value
+        """
+
+        self.n = n
+        self.D = D
+        # N1+(·w_<i+1>)
+        self._N_dot_tokens_dict = N_dot_tokens = defaultdict(set)
+        # N1+(w^<n-1> ·)
+        self._N_tokens_dot_dict = N_tokens_dot = defaultdict(set)
+        self._N_dot_tokens_dot_dict = N_dot_tokens_dot = defaultdict(set)
+        self.counts = counts = defaultdict(int)
+        vocabulary = []
+
+        sents = list(map(lambda x: ['<s>']*(n-1) + x + ['</s>'], sents))
+
+        if D is None:
+            total_sents = len(sents)
+            k = int(total_sents*9/10)
+            training_sents = sents[:k]
+            held_out_sents = sents[k:]
+            training_sents = list(map(lambda x: ['<s>']*(n-1) + x + ['</s>'], training_sents))
+            for sent in training_sents:
+                for j in range(n+1):
+                    for i in range(n-j, len(sent) - j + 1):
+                        ngram = tuple(sent[i: i + j])
+                        counts[ngram] += 1
+                        if ngram:
+                            if len(ngram) == 1:
+                                vocabulary.append(ngram[0])
+                            else:
+                                right_token, left_token, right_kgram, left_kgram, middle_kgram =\
+                                    ngram[-1:], ngram[:1], ngram[1:], ngram[:-1], ngram[1:-1]
+                                N_dot_tokens[right_kgram].add(left_token)
+                                N_tokens_dot[left_kgram].add(right_token)
+                                if middle_kgram:
+                                    N_dot_tokens_dot[middle_kgram].add(right_token)
+                                    N_dot_tokens_dot[middle_kgram].add(left_token)
+            if n - 1:
+                counts[('<s>',)*(n-1)] = len(sents)
+            self.vocab = set(vocabulary)
+            aux = 0
+            for w in self.vocab:
+                aux += len(self._N_dot_tokens_dict[(w,)])
+            self._N_dot_dot_attr = aux
+            D_candidates = [i*0.12 for i in range(1, 9)]
+            xs = []
+            for D in D_candidates:
+                self.D = D
+                aux_perplexity = self.perplexity(held_out_sents)
+                xs.append((D, aux_perplexity))
+            xs.sort(key=lambda x: x[1])
+            self.D = xs[0][0]
+            with open('kneserney_' + str(n) + '_parameters_'+corpus, 'a') as f:
+                f.write('Order: {}\n'.format(self.n))
+                f.write('D: {}\n'.format(self.D))
+                f.write('Perplexity observed: {}\n'.format(xs[0][1]))
+                f.write('-------------------------------\n')
+            f.close()
+
+        # discount value D provided
+        else:
+            for sent in sents:
+                for j in range(n+1):
+                    # all k-grams for 0 <= k <= n
+                    for i in range(n-j, len(sent) - j + 1):
+                        ngram = tuple(sent[i: i + j])
+                        counts[ngram] += 1
+                        if ngram:
+                            if len(ngram) == 1:
+                                vocabulary.append(ngram[0])
+                            else:
+                                # e.g., ngram = (1,2,3,4,5,6,7,8)
+                                # right_token = (8,)
+                                # left_token = (1,)
+                                # right_kgram = (2,3,4,5,6,7,8)
+                                # left_kgram = (1,2,3,4,5,6,7)
+                                # middle_kgram = (2,3,4,5,6,7)
+                                right_token, left_token, right_kgram, left_kgram, middle_kgram =\
+                                    ngram[-1:], ngram[:1], ngram[1:], ngram[:-1], ngram[1:-1]
+                                N_dot_tokens[right_kgram].add(left_token)
+                                N_tokens_dot[left_kgram].add(right_token)
+                                if middle_kgram:
+                                    N_dot_tokens_dot[middle_kgram].add(right_token)
+                                    N_dot_tokens_dot[middle_kgram].add(left_token)
+            if n-1:
+                counts[('<s>',)*(n-1)] = len(sents)
+            self.vocab = set(vocabulary)
+
+            aux = 0
+            for w in self.vocab:
+                aux += len(self._N_dot_tokens_dict[(w,)])
+            self._N_dot_dot_attr = aux
+
+            xs = [k for k, v in counts.items() if v == 1 and n == len(k)]
+            ys = [k for k, v in counts.items() if v == 2 and n == len(k)]
+            n1 = len(xs)
+            n2 = len(ys)
+            self.D = n1 / (n1 + 2 * n2)
+
+    def V(self):
+        """
+        returns the size of the vocabulary
+        """
+        return len(self.vocab)
+
+    def N_dot_dot(self):
+        """
+        Returns the sum of N_dot_token(w) for all w in the vocabulary
+        """
+        return self._N_dot_dot_attr
+
+    def N_tokens_dot(self, tokens):
+        """
+        Returns the count of unique words in which count(prev_tokens+word) > 0
+        i.e., how many different ngrams it completes
+
+        prev_token -- a tuple of strings
+        """
+        if type(tokens) is not tuple:
+            raise TypeError('`tokens` has to be a tuple of strings')
+        return len(self._N_tokens_dot_dict[tokens])
+
+    def N_dot_tokens(self, tokens):
+        """
+        Returns the count of unique ngrams it completes
+
+        tokens -- a tuple of strings
+        """
+        if type(tokens) is not tuple:
+            raise TypeError('`tokens` has to be a tuple of strings')
+        return len(self._N_dot_tokens_dict[tokens])
+
+    def N_dot_tokens_dot(self, tokens):
+        """
+        Returns the count of unique ngrams it completes
+
+        tokens -- a tuple of strings
+        """
+        if type(tokens) is not tuple:
+            raise TypeError('`tokens` has to be a tuple of strings')
+        return len(self._N_dot_tokens_dot_dict[tokens])
+
+    def get_special_param(self):
+        return "D", self.D
+
+
+# From https://west.uni-koblenz.de/sites/default/files/BachelorArbeit_MartinKoerner.pdf
+
+class KneserNeyNGram(KneserNeyBaseNGram):
+    def __init__(self, sents, n, corpus, D=None):
+        super(KneserNeyNGram, self).__init__(sents=sents, n=n, D=D)
+        self.corpus = corpus
+        self.smoothingtechnique = 'Kneser Ney Smoothing'
+
+    def cond_prob(self, token, prev_tokens=tuple()):
+        n = self.n
+        # two cases:
+        # 1) n == 1
+        # 2) n > 1:
+           # 2.1) k == 1
+           # 2.2) 1 < k < n
+           # 2.3) k == n
+
+        # case 1)
+        # heuristic
+        # return (count(word) + 1) / (count() + |V|)
+        if not prev_tokens and n == 1:
+            return (self.count((token,))+1) / (self.count(()) + self.V())
+
+        # case 2.1)
+        # lowest ngram
+        if not prev_tokens and n > 1:
+            aux1 = self.N_dot_tokens((token,))
+            aux2 = self.N_dot_dot()
+            # addone smoothing
+            return (aux1 + 1) / (aux2 + self.V())
+
+        # highest ngram
+        if len(prev_tokens) == n-1:
+            c = self.count(prev_tokens) + 1
+            t1 = max(self.count(prev_tokens+(token,)) - self.D, 0) / c
+            t2 = self.D * max(self.N_tokens_dot(prev_tokens), 1) / c
+            t3 = self.cond_prob(token, prev_tokens[1:])
+            return t1 + t2 * t3
+        # lower ngram
+        else:
+            aux = max(self.N_dot_tokens_dot(prev_tokens), 1)
+            t1 = max(self.N_dot_tokens(prev_tokens+(token,)) - self.D, 0) / aux
+            t2 = self.D * max(self.N_tokens_dot(prev_tokens), 1) / aux
+            t3 = self.cond_prob(token, prev_tokens[1:])
+            return t1 + t2 * t3
 
 
 class NGramGenerator(object):
