@@ -5,9 +5,9 @@ PLN 2015: Procesamiento de Lenguaje Natural 2015
 Práctico 4: Algoritmo de Smoothing Kneser-Ney
 =============================================
 
+
 En el `Práctico 1`_ se trabajó con el Modelado de Lenguaje y varias técnicas de *smoothing* para lidiar con palabras no observadas en entrenamiento.
-El objetivo de este práctico es implementar otra técnica de smoothing con la que se esperan obtener mejores resultados que los ya observados.
-La implementación del algoritmo de smoothing está inspirado en el *techinical report* de `Chen & Goodman`_ y en la tesis de `Martin Christian Körner`_.
+El objetivo de este práctico es implementar otra técnica de smoothing con la que se esperan obtener mejores resultados que los ya observados. La implementación del algoritmo de smoothing está inspirado en el *techinical report* de `Chen & Goodman`_ y en la tesis de `Martin Christian Körner`_.
 
 La idea básica detrás del algoritmo de *Kneser Ney* es introducir de alguna manera la idea de contexto. Por ejemplo, como explica Dan Jurafsky en sus videolecturas_, en un corpus podemos observar una gran cantidad de unigramas 'San', pero si nos movemos a bigramas, vemos que en la gran mayoría de los casos el unigrama 'San', solo está acompañado del unigrama 'Francisco'.
 
