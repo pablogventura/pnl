@@ -1,5 +1,7 @@
 #! /bin/bash
 
+mkdir -p ./reports
+
 for a in $(ls ./trained_models)
 do
     for b in $(ls ./trained_models/$a)

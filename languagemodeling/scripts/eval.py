@@ -36,7 +36,7 @@ if __name__ == '__main__':
         k = len(test_data)
         test_data = test_data[int(k*9/10):]
 
-    print('\nEvaluating on {} corpus...\n'.format(corp[c]))
+    print('Evaluating on {} corpus...\n'.format(corp[c]))
     print('Model type: NGram Model')
     try:
         print('Smoothing Technique: {}'.format(model.smoothingtechnique))
