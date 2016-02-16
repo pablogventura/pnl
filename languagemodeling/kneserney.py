@@ -86,7 +86,7 @@ class NGram(object):
             c_p = self.cond_prob(sent[i], tuple(sent[i-self.n+1:i]))
             # to catch a math error
             if not c_p:
-#                import pdb; pdb.set_trace()
+#                import ipdb; ipdb.set_trace()
                 return float('-inf')
             prob += log(c_p, 2)
 
@@ -104,69 +104,108 @@ class NGram(object):
         print('Computing perplexity on {} sents'.format(len(sents)))
         l = 0
         for j, sent in enumerate(sents):
-
             l += self.sent_log_prob(sent) / M
         return pow(2, -l)
 
 
-class KN(NGram):
-    def __init__(self, sents, n):
+class KneserNeyBaseNGram(NGram):
+    def __init__(self, sents, n, D=None):
 
         self.n = n
-
-        sents = list(map(lambda x: ['<s>']*(n-1) + x + ['</s>'], sents))
-
+        self.D = D
         # N1+(·w_<i+1>)
         self._N_dot_tokens_dict = N_dot_tokens = defaultdict(set)
-
         # N1+(w^<n-1> ·)
         self._N_tokens_dot_dict = N_tokens_dot = defaultdict(set)
-
         self._N_dot_tokens_dot_dict = N_dot_tokens_dot = defaultdict(set)
-
         self.counts = counts = defaultdict(int)
         vocabulary = []
 
-        for sent in sents:
-            for j in range(n+1):
-                # all k-grams for 0 <= k <= n
-                for i in range(n-j, len(sent) - j + 1):
-                    ngram = tuple(sent[i: i + j])
-                    counts[ngram] += 1
-                    if ngram:
-                        if len(ngram) == 1:
-                            vocabulary.append(ngram[0])
-                        else:
-                            # e.g., ngram = (1,2,3,4,5,6,7,8)
-                            # right_token = (8,)
-                            # left_token = (1,)
-                            # right_kgram = (2,3,4,5,6,7,8)
-                            # left_kgram = (1,2,3,4,5,6,7)
-                            # middle_kgram = (2,3,4,5,6,7)
-                            right_token, left_token, right_kgram, left_kgram, middle_kgram =\
-                                ngram[-1:], ngram[:1], ngram[1:], ngram[:-1], ngram[1:-1]
-                            N_dot_tokens[right_kgram].add(left_token)
-                            N_tokens_dot[left_kgram].add(right_token)
-                            if middle_kgram:
-                                N_dot_tokens_dot[middle_kgram].add(right_token)
-                                N_dot_tokens_dot[middle_kgram].add(left_token)
-        if n-1:
-            counts[('<s>',)*(n-1)] = len(sents)
-        self.vocab = set(vocabulary)
+        sents = list(map(lambda x: ['<s>']*(n-1) + x + ['</s>'], sents))
 
-        aux=0
-        for w in self.vocab:
-            aux += len(self._N_dot_tokens_dict[(w,)])
-        self._N_dot_dot_attr = aux
+        if D is None:
+            total_sents = len(sents)
+            k = int(total_sents*9/10)
+            training_sents = sents[:k]
+            held_out_sents = sents[k:]
+            training_sents = list(map(lambda x: ['<s>']*(n-1) + x + ['</s>'], training_sents))
+            for sent in training_sents:
+                for j in range(n+1):
+                    for i in range(n-j, len(sent) - j + 1):
+                        ngram = tuple(sent[i: i + j])
+                        counts[ngram] += 1
+                        if ngram:
+                            if len(ngram) == 1:
+                                vocabulary.append(ngram[0])
+                            else:
+                                right_token, left_token, right_kgram, left_kgram, middle_kgram =\
+                                    ngram[-1:], ngram[:1], ngram[1:], ngram[:-1], ngram[1:-1]
+                                N_dot_tokens[right_kgram].add(left_token)
+                                N_tokens_dot[left_kgram].add(right_token)
+                                if middle_kgram:
+                                    N_dot_tokens_dot[middle_kgram].add(right_token)
+                                    N_dot_tokens_dot[middle_kgram].add(left_token)
+            if n -1:
+                counts[('<s>',)*(n-1)] = len(sents)
+            self.vocab = set(vocabulary)
+            aux=0
+            for w in self.vocab:
+                aux += len(self._N_dot_tokens_dict[(w,)])
+            self._N_dot_dot_attr = aux
+            D_candidates = [i*0.12 for i in range(1,9)]
+            xs = []
+            for D in D_candidates:
+                self.D = D
+                aux_perplexity = self.perplexity(held_out_sents)
+                xs.append( (D, aux_perplexity) )
+            xs.sort(key=lambda x: x[1])
+            self.D = xs[0][0]
+            with open('kneserney_' + str(n) + '_parameters','a') as f:
+                f.write('Order: {}\n'.format(self.n))
+                f.write('D: {}\n'.format(self.D))
+                f.write('Perplexity observed: {}\n'.format(xs[0][1]))
+                f.write('-------------------------------\n')
+            f.close()
 
-        # for old implementations
-        # self.aux1 = aux1 + len(self.vocab)
+        # discount value D provided
+        else:
+            for sent in sents:
+                for j in range(n+1):
+                    # all k-grams for 0 <= k <= n
+                    for i in range(n-j, len(sent) - j + 1):
+                        ngram = tuple(sent[i: i + j])
+                        counts[ngram] += 1
+                        if ngram:
+                            if len(ngram) == 1:
+                                vocabulary.append(ngram[0])
+                            else:
+                                # e.g., ngram = (1,2,3,4,5,6,7,8)
+                                # right_token = (8,)
+                                # left_token = (1,)
+                                # right_kgram = (2,3,4,5,6,7,8)
+                                # left_kgram = (1,2,3,4,5,6,7)
+                                # middle_kgram = (2,3,4,5,6,7)
+                                right_token, left_token, right_kgram, left_kgram, middle_kgram =\
+                                    ngram[-1:], ngram[:1], ngram[1:], ngram[:-1], ngram[1:-1]
+                                N_dot_tokens[right_kgram].add(left_token)
+                                N_tokens_dot[left_kgram].add(right_token)
+                                if middle_kgram:
+                                    N_dot_tokens_dot[middle_kgram].add(right_token)
+                                    N_dot_tokens_dot[middle_kgram].add(left_token)
+            if n-1:
+                counts[('<s>',)*(n-1)] = len(sents)
+            self.vocab = set(vocabulary)
 
-        xs = [k for k, v in counts.items() if v == 1 and n == len(k)]
-        ys = [k for k, v in counts.items() if v == 2 and n == len(k)]
-        n1 = len(xs)
-        n2 = len(ys)
-        self.D = n1 / (n1 + 2 * n2)
+            aux=0
+            for w in self.vocab:
+                aux += len(self._N_dot_tokens_dict[(w,)])
+            self._N_dot_dot_attr = aux
+
+            xs = [k for k, v in counts.items() if v == 1 and n == len(k)]
+            ys = [k for k, v in counts.items() if v == 2 and n == len(k)]
+            n1 = len(xs)
+            n2 = len(ys)
+            self.D = n1 / (n1 + 2 * n2)
 
     def V(self):
         """
@@ -214,9 +253,9 @@ class KN(NGram):
 # Attemp 4, from
 # https://west.uni-koblenz.de/sites/default/files/BachelorArbeit_MartinKoerner.pdf
 
-class KN4(KN):
-    def __init__(self, sents, n):
-        super (KN4, self).__init__(sents=sents, n=n)
+class KneserNeyNGram(KneserNeyBaseNGram):
+    def __init__(self, sents, n, D=None):
+        super (KneserNeyNGram, self).__init__(sents=sents, n=n, D=D)
 
     def cond_prob(self, token, prev_tokens=tuple()):
         n = self.n
@@ -238,15 +277,18 @@ class KN4(KN):
         if not prev_tokens and n > 1:
             aux1 = self.N_dot_tokens((token,))
             aux2 = self.N_dot_dot()
-            return aux1 / aux2
+            return (aux1 + 1 )/ (aux2 + self.V())
 
         # highest ngram
         if len(prev_tokens) == n-1:
-            c = self.count(prev_tokens)
+            c = self.count(prev_tokens) + 1
             if c:
                 t1 = max(self.count(prev_tokens+(token,)) - self.D, 0) / c
-                t2 = self.D * self.N_tokens_dot(prev_tokens) / self.count(prev_tokens)
+                t2 = self.D * max(self.N_tokens_dot(prev_tokens), 1) / c
                 t3 = self.cond_prob(token, prev_tokens[1:])
+                v = t1 + t2 * t3
+ #               if not v:
+#                    import ipdb;ipdb.set_trace()
                 return t1 + t2 * t3
             else:
                 return 0
@@ -255,11 +297,11 @@ class KN4(KN):
   #          aux = 0
  #           for word in self.vocab:
 #                aux += self.N_dot_tokens(prev_tokens+(word,))
-            aux = self.N_dot_tokens_dot(prev_tokens)
-#            import ipdb;ipdb.set_trace()
+            aux = max(self.N_dot_tokens_dot(prev_tokens),1)
+
             if aux:
                 t1 = max(self.N_dot_tokens(prev_tokens+(token,)) - self.D, 0) / aux
-                t2 = self.D * self.N_tokens_dot(prev_tokens) / aux
+                t2 = self.D * max(self.N_tokens_dot(prev_tokens),1) / aux
                 t3 = self.cond_prob(token, prev_tokens[1:])
                 return t1 + t2 * t3
             else:
