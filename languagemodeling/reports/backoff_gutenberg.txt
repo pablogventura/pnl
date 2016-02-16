@@ -1,0 +1,52 @@
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 1
+Model Special Parameter Beta: 0.1
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 2155.1463740028435
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 2
+Model Special Parameter Beta: 0.8
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 1541.7676336601746
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 3
+Model Special Parameter Beta: 0.8
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 1659.181755158166
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 4
+Model Special Parameter Beta: 0.8
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 1700.7073719495786
+
+========================================================
+

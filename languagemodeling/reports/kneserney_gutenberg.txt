@@ -1,0 +1,52 @@
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 1
+Model Special Parameter D: 0.5863777089783282
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 1944.9536297716302
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 2
+Model Special Parameter D: 0.7241964262171166
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 1170.8027589584394
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 3
+Model Special Parameter D: 0.8141552459776503
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 917.7185028500644
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 4
+Model Special Parameter D: 0.8841544201038289
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 1034.761398741796
+
+========================================================
+

@@ -1,0 +1,52 @@
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 1
+Model Special Parameter D: 0.5922020867655134
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 833.0158019819393
+
+========================================================
+
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 2
+Model Special Parameter D: 0.7459535347831636
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 261.5890954772302
+
+========================================================
+
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 3
+Model Special Parameter D: 0.8572798030556661
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 201.1219509343437
+
+========================================================
+
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 4
+Model Special Parameter D: 0.9287013016085424
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 239.14422879128205
+
+========================================================
+

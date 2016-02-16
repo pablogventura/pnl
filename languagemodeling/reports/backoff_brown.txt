@@ -1,0 +1,52 @@
+Evaluating on Brown corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 1
+Model Special Parameter Beta: 0.1
+
+Computing Perplexity on 5734 sents...
+
+Perplexity: 1570.486495319257
+
+========================================================
+
+Evaluating on Brown corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 2
+Model Special Parameter Beta: 0.7000000000000001
+
+Computing Perplexity on 5734 sents...
+
+Perplexity: 490.5580726219793
+
+========================================================
+
+Evaluating on Brown corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 3
+Model Special Parameter Beta: 0.8
+
+Computing Perplexity on 5734 sents...
+
+Perplexity: 481.41146687143913
+
+========================================================
+
+Evaluating on Brown corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 4
+Model Special Parameter Beta: 0.8
+
+Computing Perplexity on 5734 sents...
+
+Perplexity: 494.52847089276764
+
+========================================================
+

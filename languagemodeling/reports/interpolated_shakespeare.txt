@@ -1,0 +1,52 @@
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Interpolated (Jelinek Mercer) Smoothing
+Model Order: 1
+Model Special Parameter Gamma: 50
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 834.6579147858134
+
+========================================================
+
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Interpolated (Jelinek Mercer) Smoothing
+Model Order: 2
+Model Special Parameter Gamma: 450
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 352.03640042544396
+
+========================================================
+
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Interpolated (Jelinek Mercer) Smoothing
+Model Order: 3
+Model Special Parameter Gamma: 500
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 331.6948748081018
+
+========================================================
+
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Interpolated (Jelinek Mercer) Smoothing
+Model Order: 4
+Model Special Parameter Gamma: 550
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 328.33366332791246
+
+========================================================
+

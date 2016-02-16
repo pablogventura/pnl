@@ -1,0 +1,52 @@
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 1
+Model Special Parameter Beta: 0.1
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 834.6579147858134
+
+========================================================
+
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 2
+Model Special Parameter Beta: 0.7000000000000001
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 273.22783116746604
+
+========================================================
+
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 3
+Model Special Parameter Beta: 0.8
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 254.69269594564977
+
+========================================================
+
+Evaluating on Shakespeare corpus...
+
+Model type: NGram Model
+Smoothing Technique: Back Off (Katz) with Discounting Smoothing
+Model Order: 4
+Model Special Parameter Beta: 0.8
+
+Computing Perplexity on 6039 sents...
+
+Perplexity: 261.0812800682789
+
+========================================================
+

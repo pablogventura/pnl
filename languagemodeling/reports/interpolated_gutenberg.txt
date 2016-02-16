@@ -1,0 +1,52 @@
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Interpolated (Jelinek Mercer) Smoothing
+Model Order: 1
+Model Special Parameter Gamma: 50
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 2155.1463740028435
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Interpolated (Jelinek Mercer) Smoothing
+Model Order: 2
+Model Special Parameter Gamma: 700
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 1821.5273675418018
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Interpolated (Jelinek Mercer) Smoothing
+Model Order: 3
+Model Special Parameter Gamma: 700
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 1899.8696568481912
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Smoothing Technique: Interpolated (Jelinek Mercer) Smoothing
+Model Order: 4
+Model Special Parameter Gamma: 700
+
+Computing Perplexity on 9481 sents...
+
+Perplexity: 1914.0007822720738
+
+========================================================
+

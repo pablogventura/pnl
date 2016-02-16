@@ -1,0 +1,44 @@
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Model Order: 1
+No Special Parameter for this Model / Smoothing Technique
+Computing Perplexity on 9481 sents...
+
+Perplexity: inf
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Model Order: 2
+No Special Parameter for this Model / Smoothing Technique
+Computing Perplexity on 9481 sents...
+
+Perplexity: inf
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Model Order: 3
+No Special Parameter for this Model / Smoothing Technique
+Computing Perplexity on 9481 sents...
+
+Perplexity: inf
+
+========================================================
+
+Evaluating on Gutenberg corpus...
+
+Model type: NGram Model
+Model Order: 4
+No Special Parameter for this Model / Smoothing Technique
+Computing Perplexity on 9481 sents...
+
+Perplexity: inf
+
+========================================================
+

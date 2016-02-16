@@ -1,0 +1,52 @@
+Evaluating on Brown corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 1
+Model Special Parameter D: 0.6082244103276371
+
+Computing Perplexity on 5734 sents...
+
+Perplexity: 1512.7744977902314
+
+========================================================
+
+Evaluating on Brown corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 2
+Model Special Parameter D: 0.764047298166077
+
+Computing Perplexity on 5734 sents...
+
+Perplexity: 453.8446594606433
+
+========================================================
+
+Evaluating on Brown corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 3
+Model Special Parameter D: 0.8800448766072901
+
+Computing Perplexity on 5734 sents...
+
+Perplexity: 414.3308217143281
+
+========================================================
+
+Evaluating on Brown corpus...
+
+Model type: NGram Model
+Smoothing Technique: Kneser Ney Smoothing
+Model Order: 4
+Model Special Parameter D: 0.9460548636849679
+
+Computing Perplexity on 5734 sents...
+
+Perplexity: 507.97805308928235
+
+========================================================
+
