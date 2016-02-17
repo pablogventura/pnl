@@ -458,11 +458,10 @@ class KneserNeyBaseNGram(NGram):
         self._N_dot_tokens_dict = N_dot_tokens = defaultdict(set)
         # N1+(w^<n-1> ·)
         self._N_tokens_dot_dict = N_tokens_dot = defaultdict(set)
+        # N1+(· w^<i-1>_<i-n+1> ·)
         self._N_dot_tokens_dot_dict = N_dot_tokens_dot = defaultdict(set)
         self.counts = counts = defaultdict(int)
         vocabulary = []
-
-        sents = list(map(lambda x: ['<s>']*(n-1) + x + ['</s>'], sents))
 
         if D is None:
             total_sents = len(sents)
@@ -510,6 +509,7 @@ class KneserNeyBaseNGram(NGram):
 
         # discount value D provided
         else:
+            sents = list(map(lambda x: ['<s>']*(n-1) + x + ['</s>'], sents))
             for sent in sents:
                 for j in range(n+1):
                     # all k-grams for 0 <= k <= n
@@ -565,7 +565,7 @@ class KneserNeyBaseNGram(NGram):
         Returns the count of unique words in which count(prev_tokens+word) > 0
         i.e., how many different ngrams it completes
 
-        prev_token -- a tuple of strings
+        tokens -- a tuple of strings
         """
         if type(tokens) is not tuple:
             raise TypeError('`tokens` has to be a tuple of strings')
@@ -611,8 +611,7 @@ class KneserNeyNGram(KneserNeyBaseNGram):
            # 2.3) k == n
 
         # case 1)
-        # heuristic
-        # return (count(word) + 1) / (count() + |V|)
+        # heuristic addone
         if not prev_tokens and n == 1:
             return (self.count((token,))+1) / (self.count(()) + self.V())
 
@@ -628,11 +627,13 @@ class KneserNeyNGram(KneserNeyBaseNGram):
         if len(prev_tokens) == n-1:
             c = self.count(prev_tokens) + 1
             t1 = max(self.count(prev_tokens+(token,)) - self.D, 0) / c
+            # addone smoothing
             t2 = self.D * max(self.N_tokens_dot(prev_tokens), 1) / c
             t3 = self.cond_prob(token, prev_tokens[1:])
             return t1 + t2 * t3
         # lower ngram
         else:
+            # addone smoothing
             aux = max(self.N_dot_tokens_dot(prev_tokens), 1)
             t1 = max(self.N_dot_tokens(prev_tokens+(token,)) - self.D, 0) / aux
             t2 = self.D * max(self.N_tokens_dot(prev_tokens), 1) / aux
