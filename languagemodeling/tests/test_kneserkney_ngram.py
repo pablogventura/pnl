@@ -133,7 +133,7 @@ class TestNGram(TestCase):
         }
 
         for k, v in N_dot_tokens_dict.items():
-            self.assertEqual(model._N_dot_tokens_dict[k], v, msg=v)
+            self.assertEqual(model.N_dot_tokens(k), v, msg=v)
 
     def test_N_tokens_dot_dict_2gram(self):
         model = KneserNeyNGram(n=2, sents=self.sents, D=1)
@@ -163,7 +163,7 @@ class TestNGram(TestCase):
         }
 
         for k, v in N_tokens_dot_dict.items():
-            self.assertEqual(model._N_tokens_dot_dict[k], v, msg=v)
+            self.assertEqual(model.N_tokens_dot(k), v, msg=v)
 
     def test_norm_2gram(self):
         models = [

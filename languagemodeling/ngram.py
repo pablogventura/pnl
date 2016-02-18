@@ -562,34 +562,34 @@ class KneserNeyBaseNGram(NGram):
 
     def N_tokens_dot(self, tokens):
         """
-        Returns the count of unique words in which count(prev_tokens+word) > 0
-        i.e., how many different ngrams it completes
+        Returns a set of words in which count(prev_tokens+word) > 0
+        i.e., the different ngrams it completes
 
         tokens -- a tuple of strings
         """
         if type(tokens) is not tuple:
             raise TypeError('`tokens` has to be a tuple of strings')
-        return len(self._N_tokens_dot_dict[tokens])
+        return self._N_tokens_dot_dict[tokens]
 
     def N_dot_tokens(self, tokens):
         """
-        Returns the count of unique ngrams it completes
+        Returns a set of ngrams it completes
 
         tokens -- a tuple of strings
         """
         if type(tokens) is not tuple:
             raise TypeError('`tokens` has to be a tuple of strings')
-        return len(self._N_dot_tokens_dict[tokens])
+        return self._N_dot_tokens_dict[tokens]
 
     def N_dot_tokens_dot(self, tokens):
         """
-        Returns the count of unique ngrams it completes
+        Returns a set of ngrams it completes
 
         tokens -- a tuple of strings
         """
         if type(tokens) is not tuple:
             raise TypeError('`tokens` has to be a tuple of strings')
-        return len(self._N_dot_tokens_dot_dict[tokens])
+        return self._N_dot_tokens_dot_dict[tokens]
 
     def get_special_param(self):
         return "D", self.D
@@ -618,7 +618,7 @@ class KneserNeyNGram(KneserNeyBaseNGram):
         # case 2.1)
         # lowest ngram
         if not prev_tokens and n > 1:
-            aux1 = self.N_dot_tokens((token,))
+            aux1 = len(self.N_dot_tokens((token,)))
             aux2 = self.N_dot_dot()
             # addone smoothing
             return (aux1 + 1) / (aux2 + self.V())
@@ -628,15 +628,15 @@ class KneserNeyNGram(KneserNeyBaseNGram):
             c = self.count(prev_tokens) + 1
             t1 = max(self.count(prev_tokens+(token,)) - self.D, 0) / c
             # addone smoothing
-            t2 = self.D * max(self.N_tokens_dot(prev_tokens), 1) / c
+            t2 = self.D * max(len(self.N_tokens_dot(prev_tokens)), 1) / c
             t3 = self.cond_prob(token, prev_tokens[1:])
             return t1 + t2 * t3
         # lower ngram
         else:
             # addone smoothing
-            aux = max(self.N_dot_tokens_dot(prev_tokens), 1)
-            t1 = max(self.N_dot_tokens(prev_tokens+(token,)) - self.D, 0) / aux
-            t2 = self.D * max(self.N_tokens_dot(prev_tokens), 1) / aux
+            aux = max(len(self.N_dot_tokens_dot(prev_tokens)), 1)
+            t1 = max(len(self.N_dot_tokens(prev_tokens+(token,))) - self.D, 0) / aux
+            t2 = self.D * max(len(self.N_tokens_dot(prev_tokens)), 1) / aux
             t3 = self.cond_prob(token, prev_tokens[1:])
             return t1 + t2 * t3
 
