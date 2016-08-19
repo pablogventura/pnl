@@ -1,5 +1,0 @@
-flake8
-nose
-docopt
-nltk
--e .  # install our code in editing mode
